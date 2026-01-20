@@ -1,0 +1,37 @@
+{
+  "version": "2.2",
+  "format": "chunked_flows",
+  "created": "2026-01-20T02:16:17.189153",
+  "source_file": "attack_packets_first5days.csv",
+  "source_files": [
+    "attack_packets_first5days.csv"
+  ],
+  "total_packets": 24469142,
+  "tcp_packets": 24042521,
+  "unique_ips": 294,
+  "total_flows": 5482939,
+  "chunk_size_mb": 10.0,
+  "total_chunks": 795,
+  "time_range": {
+    "start": 1257254652674641,
+    "end": 1257654102004202,
+    "duration": 399449329561
+  },
+  "structure": {
+    "chunks_meta": "flows/chunks_meta.json",
+    "flow_chunks": "flows/chunk_*.json",
+    "time_bins": "indices/bins.json",
+    "flow_bins": "indices/flow_bins.json",
+    "ip_stats": "ips/ip_stats.json",
+    "flag_stats": "ips/flag_stats.json",
+    "unique_ips": "ips/unique_ips.json"
+  },
+  "attack_context": null,
+  "filter_applied": {
+    "ips": null,
+    "time_start_us": null,
+    "time_end_us": null,
+    "time_start_minutes": null,
+    "time_end_minutes": null
+  }
+}

@@ -8,6 +8,7 @@ attacks_in_minutes_timearcs/
 # Exclude most of packets_data except specific directories
 packets_data/*
 !packets_data/attack_packets_day1to5/
+!packets_data/attack_flows_day1to5/
 
 # Data files
 *.csv

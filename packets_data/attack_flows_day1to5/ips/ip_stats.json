@@ -1,0 +1,2322 @@
+{
+  "172.28.1.134": {
+    "sent_packets": 104255,
+    "recv_packets": 53078,
+    "sent_bytes": 6256632,
+    "recv_bytes": 3195138,
+    "first_ts": 1257254652674641,
+    "last_ts": 1257514120726625
+  },
+  "205.63.202.67": {
+    "sent_packets": 900,
+    "recv_packets": 1044,
+    "sent_bytes": 158802,
+    "recv_bytes": 75744,
+    "first_ts": 1257254652674641,
+    "last_ts": 1257514120726625
+  },
+  "172.28.1.203": {
+    "sent_packets": 104135,
+    "recv_packets": 53018,
+    "sent_bytes": 6249432,
+    "recv_bytes": 3191538,
+    "first_ts": 1257254653671858,
+    "last_ts": 1257514120712232
+  },
+  "172.28.129.124": {
+    "sent_packets": 104259,
+    "recv_packets": 53080,
+    "sent_bytes": 6256872,
+    "recv_bytes": 3195258,
+    "first_ts": 1257254664669047,
+    "last_ts": 1257514120712376
+  },
+  "172.28.133.12": {
+    "sent_packets": 104199,
+    "recv_packets": 53050,
+    "sent_bytes": 6253272,
+    "recv_bytes": 3193458,
+    "first_ts": 1257254686683205,
+    "last_ts": 1257514120712840
+  },
+  "172.28.133.158": {
+    "sent_packets": 104141,
+    "recv_packets": 53021,
+    "sent_bytes": 6249792,
+    "recv_bytes": 3191718,
+    "first_ts": 1257254705683544,
+    "last_ts": 1257514120713481
+  },
+  "172.28.133.86": {
+    "sent_packets": 104923,
+    "recv_packets": 53382,
+    "sent_bytes": 7026475,
+    "recv_bytes": 3217113,
+    "first_ts": 1257254718685354,
+    "last_ts": 1257524720773886
+  },
+  "172.28.195.194": {
+    "sent_packets": 92577,
+    "recv_packets": 47240,
+    "sent_bytes": 5555940,
+    "recv_bytes": 2844870,
+    "first_ts": 1257254720684815,
+    "last_ts": 1257514120714775
+  },
+  "172.28.198.166": {
+    "sent_packets": 68909,
+    "recv_packets": 35408,
+    "sent_bytes": 4135836,
+    "recv_bytes": 2134974,
+    "first_ts": 1257254740684783,
+    "last_ts": 1257513653794792
+  },
+  "172.28.20.99": {
+    "sent_packets": 39512,
+    "recv_packets": 20712,
+    "sent_bytes": 2371986,
+    "recv_bytes": 1253244,
+    "first_ts": 1257254763688322,
+    "last_ts": 1257513663792015
+  },
+  "172.28.4.202": {
+    "sent_packets": 91,
+    "recv_packets": 90,
+    "sent_bytes": 6690,
+    "recv_bytes": 15966,
+    "first_ts": 1257254791696185,
+    "last_ts": 1257513673794377
+  },
+  "152.162.178.254": {
+    "sent_packets": 420847,
+    "recv_packets": 825233,
+    "sent_bytes": 25250820,
+    "recv_bytes": 49513980,
+    "first_ts": 1257254946765415,
+    "last_ts": 1257514115623136
+  },
+  "19.16.150.30": {
+    "sent_packets": 16,
+    "recv_packets": 0,
+    "sent_bytes": 1904,
+    "recv_bytes": 0,
+    "first_ts": 1257254999579764,
+    "last_ts": 1257434418795983
+  },
+  "172.28.177.139": {
+    "sent_packets": 0,
+    "recv_packets": 16,
+    "sent_bytes": 0,
+    "recv_bytes": 1904,
+    "first_ts": 1257254999579764,
+    "last_ts": 1257434418795983
+  },
+  "49.232.95.127": {
+    "sent_packets": 32,
+    "recv_packets": 0,
+    "sent_bytes": 1920,
+    "recv_bytes": 0,
+    "first_ts": 1257255123583826,
+    "last_ts": 1257647276112561
+  },
+  "172.28.97.169": {
+    "sent_packets": 0,
+    "recv_packets": 32,
+    "sent_bytes": 0,
+    "recv_bytes": 1920,
+    "first_ts": 1257255123583826,
+    "last_ts": 1257647276112561
+  },
+  "219.160.125.33": {
+    "sent_packets": 20,
+    "recv_packets": 0,
+    "sent_bytes": 1580,
+    "recv_bytes": 0,
+    "first_ts": 1257255153576730,
+    "last_ts": 1257556545604481
+  },
+  "172.28.74.179": {
+    "sent_packets": 0,
+    "recv_packets": 20,
+    "sent_bytes": 0,
+    "recv_bytes": 1580,
+    "first_ts": 1257255153576730,
+    "last_ts": 1257556545604481
+  },
+  "211.144.70.97": {
+    "sent_packets": 26,
+    "recv_packets": 0,
+    "sent_bytes": 1560,
+    "recv_bytes": 0,
+    "first_ts": 1257255179587441,
+    "last_ts": 1257641465838885
+  },
+  "172.28.154.10": {
+    "sent_packets": 0,
+    "recv_packets": 26,
+    "sent_bytes": 0,
+    "recv_bytes": 1560,
+    "first_ts": 1257255179587441,
+    "last_ts": 1257641465838885
+  },
+  "158.190.85.16": {
+    "sent_packets": 22,
+    "recv_packets": 0,
+    "sent_bytes": 3080,
+    "recv_bytes": 0,
+    "first_ts": 1257255193577861,
+    "last_ts": 1257566402859074
+  },
+  "172.28.116.90": {
+    "sent_packets": 0,
+    "recv_packets": 22,
+    "sent_bytes": 0,
+    "recv_bytes": 3080,
+    "first_ts": 1257255193577861,
+    "last_ts": 1257566402859074
+  },
+  "122.201.178.72": {
+    "sent_packets": 4664,
+    "recv_packets": 0,
+    "sent_bytes": 531696,
+    "recv_bytes": 0,
+    "first_ts": 1257255209608343,
+    "last_ts": 1257621616788388
+  },
+  "172.28.42.98": {
+    "sent_packets": 0,
+    "recv_packets": 4664,
+    "sent_bytes": 0,
+    "recv_bytes": 531696,
+    "first_ts": 1257255209608343,
+    "last_ts": 1257621616788388
+  },
+  "19.202.221.71": {
+    "sent_packets": 3207189,
+    "recv_packets": 39742,
+    "sent_bytes": 192431340,
+    "recv_bytes": 2384520,
+    "first_ts": 1257255215684533,
+    "last_ts": 1257653904827136
+  },
+  "172.28.4.7": {
+    "sent_packets": 627050,
+    "recv_packets": 20383186,
+    "sent_bytes": 37623000,
+    "recv_bytes": 1222991160,
+    "first_ts": 1257255215684533,
+    "last_ts": 1257654102004202
+  },
+  "19.202.221.72": {
+    "sent_packets": 2101429,
+    "recv_packets": 26698,
+    "sent_bytes": 126085740,
+    "recv_bytes": 1601880,
+    "first_ts": 1257255215705750,
+    "last_ts": 1257653903227909
+  },
+  "19.202.221.73": {
+    "sent_packets": 3207512,
+    "recv_packets": 40122,
+    "sent_bytes": 192450720,
+    "recv_bytes": 2407320,
+    "first_ts": 1257255215705885,
+    "last_ts": 1257653904228971
+  },
+  "120.5.53.166": {
+    "sent_packets": 1949019,
+    "recv_packets": 74079,
+    "sent_bytes": 116941140,
+    "recv_bytes": 4444740,
+    "first_ts": 1257255335615474,
+    "last_ts": 1257654102004202
+  },
+  "24.168.166.204": {
+    "sent_packets": 414,
+    "recv_packets": 382,
+    "sent_bytes": 423744,
+    "recv_bytes": 28218,
+    "first_ts": 1257255350371733,
+    "last_ts": 1257582957054886
+  },
+  "172.28.23.56": {
+    "sent_packets": 382,
+    "recv_packets": 414,
+    "sent_bytes": 28218,
+    "recv_bytes": 423744,
+    "first_ts": 1257255350371733,
+    "last_ts": 1257582957054886
+  },
+  "172.28.219.190": {
+    "sent_packets": 8144,
+    "recv_packets": 4469,
+    "sent_bytes": 11581461,
+    "recv_bytes": 316054,
+    "first_ts": 1257255402739776,
+    "last_ts": 1257255731348686
+  },
+  "138.106.196.178": {
+    "sent_packets": 4451,
+    "recv_packets": 8125,
+    "sent_bytes": 294912,
+    "recv_bytes": 11580177,
+    "first_ts": 1257255402739776,
+    "last_ts": 1257255731343916
+  },
+  "28.133.133.90": {
+    "sent_packets": 1193,
+    "recv_packets": 1259,
+    "sent_bytes": 1375718,
+    "recv_bytes": 85044,
+    "first_ts": 1257255402742528,
+    "last_ts": 1257643632322094
+  },
+  "172.28.14.52": {
+    "sent_packets": 47626,
+    "recv_packets": 30091,
+    "sent_bytes": 52261856,
+    "recv_bytes": 2006476,
+    "first_ts": 1257256189759113,
+    "last_ts": 1257256480498805
+  },
+  "198.123.37.66": {
+    "sent_packets": 30073,
+    "recv_packets": 47607,
+    "sent_bytes": 1985336,
+    "recv_bytes": 52260572,
+    "first_ts": 1257256189759113,
+    "last_ts": 1257256480490182
+  },
+  "155.108.237.71": {
+    "sent_packets": 4852787,
+    "recv_packets": 88542,
+    "sent_bytes": 291167220,
+    "recv_bytes": 5312520,
+    "first_ts": 1257256245675412,
+    "last_ts": 1257587169075635
+  },
+  "218.233.109.140": {
+    "sent_packets": 4851832,
+    "recv_packets": 86240,
+    "sent_bytes": 291109920,
+    "recv_bytes": 5174400,
+    "first_ts": 1257256245697752,
+    "last_ts": 1257587168873758
+  },
+  "193.168.132.153": {
+    "sent_packets": 16,
+    "recv_packets": 0,
+    "sent_bytes": 1680,
+    "recv_bytes": 0,
+    "first_ts": 1257256605011188,
+    "last_ts": 1257630223959247
+  },
+  "172.28.147.136": {
+    "sent_packets": 0,
+    "recv_packets": 16,
+    "sent_bytes": 0,
+    "recv_bytes": 1680,
+    "first_ts": 1257256605011188,
+    "last_ts": 1257630223959247
+  },
+  "24.252.33.237": {
+    "sent_packets": 368,
+    "recv_packets": 717,
+    "sent_bytes": 40424,
+    "recv_bytes": 874653,
+    "first_ts": 1257256866811451,
+    "last_ts": 1257257392145889
+  },
+  "172.28.192.5": {
+    "sent_packets": 16287,
+    "recv_packets": 5085,
+    "sent_bytes": 21461991,
+    "recv_bytes": 362582,
+    "first_ts": 1257256866811451,
+    "last_ts": 1257635895748164
+  },
+  "172.28.221.155": {
+    "sent_packets": 703,
+    "recv_packets": 349,
+    "sent_bytes": 873169,
+    "recv_bytes": 23398,
+    "first_ts": 1257257065456308,
+    "last_ts": 1257257392145889
+  },
+  "35.182.39.183": {
+    "sent_packets": 36,
+    "recv_packets": 36,
+    "sent_bytes": 2664,
+    "recv_bytes": 2160,
+    "first_ts": 1257257695113543,
+    "last_ts": 1257642776122870
+  },
+  "172.28.134.218": {
+    "sent_packets": 36,
+    "recv_packets": 36,
+    "sent_bytes": 2160,
+    "recv_bytes": 2664,
+    "first_ts": 1257257695113543,
+    "last_ts": 1257642776122870
+  },
+  "172.28.2.93": {
+    "sent_packets": 47809,
+    "recv_packets": 31319,
+    "sent_bytes": 52645368,
+    "recv_bytes": 2087523,
+    "first_ts": 1257257838725399,
+    "last_ts": 1257258231499905
+  },
+  "34.110.234.33": {
+    "sent_packets": 31301,
+    "recv_packets": 47790,
+    "sent_bytes": 2066384,
+    "recv_bytes": 52644084,
+    "first_ts": 1257257838725399,
+    "last_ts": 1257258231487457
+  },
+  "1.23.177.16": {
+    "sent_packets": 4929,
+    "recv_packets": 8006,
+    "sent_bytes": 295740,
+    "recv_bytes": 480360,
+    "first_ts": 1257257857683058,
+    "last_ts": 1257631114234479
+  },
+  "1.90.252.36": {
+    "sent_packets": 3957,
+    "recv_packets": 6295,
+    "sent_bytes": 237420,
+    "recv_bytes": 377700,
+    "first_ts": 1257257858662470,
+    "last_ts": 1257459318268101
+  },
+  "1.101.50.36": {
+    "sent_packets": 3963,
+    "recv_packets": 6383,
+    "sent_bytes": 237780,
+    "recv_bytes": 382980,
+    "first_ts": 1257257859661858,
+    "last_ts": 1257459319268129
+  },
+  "1.102.195.22": {
+    "sent_packets": 4060,
+    "recv_packets": 6452,
+    "sent_bytes": 243600,
+    "recv_bytes": 387120,
+    "first_ts": 1257257860681371,
+    "last_ts": 1257459320268130
+  },
+  "1.144.159.30": {
+    "sent_packets": 1172,
+    "recv_packets": 2054,
+    "sent_bytes": 70320,
+    "recv_bytes": 123240,
+    "first_ts": 1257257861690994,
+    "last_ts": 1257459313667986
+  },
+  "1.181.20.71": {
+    "sent_packets": 1172,
+    "recv_packets": 2199,
+    "sent_bytes": 70320,
+    "recv_bytes": 131940,
+    "first_ts": 1257257862670446,
+    "last_ts": 1257459306065958
+  },
+  "1.199.49.19": {
+    "sent_packets": 4001,
+    "recv_packets": 6376,
+    "sent_bytes": 240060,
+    "recv_bytes": 382560,
+    "first_ts": 1257257863669988,
+    "last_ts": 1257459320068134
+  },
+  "1.226.12.37": {
+    "sent_packets": 3911,
+    "recv_packets": 6246,
+    "sent_bytes": 234660,
+    "recv_bytes": 374760,
+    "first_ts": 1257257864669583,
+    "last_ts": 1257459325066372
+  },
+  "2.66.18.14": {
+    "sent_packets": 1172,
+    "recv_packets": 2607,
+    "sent_bytes": 70320,
+    "recv_bytes": 156420,
+    "first_ts": 1257257865689002,
+    "last_ts": 1257459325668250
+  },
+  "2.190.156.35": {
+    "sent_packets": 1172,
+    "recv_packets": 2788,
+    "sent_bytes": 70320,
+    "recv_bytes": 167280,
+    "first_ts": 1257257866698572,
+    "last_ts": 1257459326468287
+  },
+  "2.234.50.12": {
+    "sent_packets": 3750,
+    "recv_packets": 5853,
+    "sent_bytes": 225000,
+    "recv_bytes": 351180,
+    "first_ts": 1257257867678072,
+    "last_ts": 1257459319068113
+  },
+  "3.1.141.25": {
+    "sent_packets": 3791,
+    "recv_packets": 5949,
+    "sent_bytes": 227460,
+    "recv_bytes": 356940,
+    "first_ts": 1257257868677766,
+    "last_ts": 1257459319668143
+  },
+  "3.118.53.21": {
+    "sent_packets": 3680,
+    "recv_packets": 5776,
+    "sent_bytes": 220800,
+    "recv_bytes": 346560,
+    "first_ts": 1257257869677172,
+    "last_ts": 1257459325668278
+  },
+  "3.121.212.34": {
+    "sent_packets": 3585,
+    "recv_packets": 5404,
+    "sent_bytes": 215100,
+    "recv_bytes": 324240,
+    "first_ts": 1257257870706643,
+    "last_ts": 1257459319068109
+  },
+  "3.194.221.19": {
+    "sent_packets": 3601,
+    "recv_packets": 5549,
+    "sent_bytes": 216060,
+    "recv_bytes": 332940,
+    "first_ts": 1257257871686180,
+    "last_ts": 1257459331666527
+  },
+  "3.230.71.16": {
+    "sent_packets": 3620,
+    "recv_packets": 5584,
+    "sent_bytes": 217200,
+    "recv_bytes": 335040,
+    "first_ts": 1257257872685723,
+    "last_ts": 1257459311867970
+  },
+  "4.149.26.80": {
+    "sent_packets": 3415,
+    "recv_packets": 5090,
+    "sent_bytes": 204900,
+    "recv_bytes": 305400,
+    "first_ts": 1257257873685236,
+    "last_ts": 1257459332868430
+  },
+  "4.220.7.27": {
+    "sent_packets": 2921,
+    "recv_packets": 1493,
+    "sent_bytes": 175260,
+    "recv_bytes": 89580,
+    "first_ts": 1257257874714962,
+    "last_ts": 1257459312687525
+  },
+  "5.154.248.27": {
+    "sent_packets": 3469,
+    "recv_packets": 5249,
+    "sent_bytes": 208140,
+    "recv_bytes": 314940,
+    "first_ts": 1257257875714273,
+    "last_ts": 1257459332066526
+  },
+  "5.180.127.39": {
+    "sent_packets": 4563,
+    "recv_packets": 7229,
+    "sent_bytes": 273780,
+    "recv_bytes": 433740,
+    "first_ts": 1257257876693814,
+    "last_ts": 1257631114037597
+  },
+  "5.189.157.16": {
+    "sent_packets": 3497,
+    "recv_packets": 5295,
+    "sent_bytes": 209820,
+    "recv_bytes": 317700,
+    "first_ts": 1257257877715871,
+    "last_ts": 1257459333268435
+  },
+  "6.9.39.78": {
+    "sent_packets": 3277,
+    "recv_packets": 4828,
+    "sent_bytes": 196620,
+    "recv_bytes": 289680,
+    "first_ts": 1257257878692941,
+    "last_ts": 1257459331066505
+  },
+  "6.24.147.26": {
+    "sent_packets": 3229,
+    "recv_packets": 4651,
+    "sent_bytes": 193740,
+    "recv_bytes": 279060,
+    "first_ts": 1257257879722440,
+    "last_ts": 1257459339868575
+  },
+  "6.56.181.16": {
+    "sent_packets": 3227,
+    "recv_packets": 4759,
+    "sent_bytes": 193620,
+    "recv_bytes": 285540,
+    "first_ts": 1257257880701973,
+    "last_ts": 1257459340868596
+  },
+  "6.73.219.34": {
+    "sent_packets": 1172,
+    "recv_packets": 2158,
+    "sent_bytes": 70320,
+    "recv_bytes": 129480,
+    "first_ts": 1257257881701499,
+    "last_ts": 1257459330066505
+  },
+  "6.108.61.62": {
+    "sent_packets": 1172,
+    "recv_packets": 2604,
+    "sent_bytes": 70320,
+    "recv_bytes": 156240,
+    "first_ts": 1257257882701379,
+    "last_ts": 1257459338866694
+  },
+  "6.114.72.11": {
+    "sent_packets": 3191,
+    "recv_packets": 4691,
+    "sent_bytes": 191460,
+    "recv_bytes": 281460,
+    "first_ts": 1257257883770551,
+    "last_ts": 1257459344266817
+  },
+  "6.148.44.38": {
+    "sent_packets": 1172,
+    "recv_packets": 1236,
+    "sent_bytes": 70320,
+    "recv_bytes": 74160,
+    "first_ts": 1257257884710119,
+    "last_ts": 1257459344466825
+  },
+  "6.166.35.36": {
+    "sent_packets": 2789,
+    "recv_packets": 1323,
+    "sent_bytes": 167340,
+    "recv_bytes": 79380,
+    "first_ts": 1257257885729605,
+    "last_ts": 1257459323728457
+  },
+  "6.216.54.23": {
+    "sent_packets": 2820,
+    "recv_packets": 1353,
+    "sent_bytes": 169200,
+    "recv_bytes": 81180,
+    "first_ts": 1257257886729133,
+    "last_ts": 1257459324738025
+  },
+  "6.223.43.24": {
+    "sent_packets": 2954,
+    "recv_packets": 4032,
+    "sent_bytes": 177240,
+    "recv_bytes": 241920,
+    "first_ts": 1257257887718683,
+    "last_ts": 1257459336066630
+  },
+  "6.231.114.20": {
+    "sent_packets": 2947,
+    "recv_packets": 4056,
+    "sent_bytes": 176820,
+    "recv_bytes": 243360,
+    "first_ts": 1257257888730744,
+    "last_ts": 1257459344466821
+  },
+  "7.12.133.14": {
+    "sent_packets": 3093,
+    "recv_packets": 4288,
+    "sent_bytes": 185580,
+    "recv_bytes": 257280,
+    "first_ts": 1257257889717833,
+    "last_ts": 1257459345866838
+  },
+  "7.64.14.33": {
+    "sent_packets": 1172,
+    "recv_packets": 2227,
+    "sent_bytes": 70320,
+    "recv_bytes": 133620,
+    "first_ts": 1257257890738559,
+    "last_ts": 1257459346866863
+  },
+  "7.122.229.21": {
+    "sent_packets": 1172,
+    "recv_packets": 1285,
+    "sent_bytes": 70320,
+    "recv_bytes": 77100,
+    "first_ts": 1257257891716916,
+    "last_ts": 1257459351668857
+  },
+  "7.139.86.72": {
+    "sent_packets": 2390,
+    "recv_packets": 1000,
+    "sent_bytes": 143400,
+    "recv_bytes": 60000,
+    "first_ts": 1257257892746312,
+    "last_ts": 1257459330728286
+  },
+  "8.35.39.15": {
+    "sent_packets": 1172,
+    "recv_packets": 1970,
+    "sent_bytes": 70320,
+    "recv_bytes": 118200,
+    "first_ts": 1257257893745871,
+    "last_ts": 1257459337468532
+  },
+  "8.47.167.19": {
+    "sent_packets": 1172,
+    "recv_packets": 2248,
+    "sent_bytes": 70320,
+    "recv_bytes": 134880,
+    "first_ts": 1257257894725381,
+    "last_ts": 1257459338466692
+  },
+  "8.70.145.44": {
+    "sent_packets": 2761,
+    "recv_packets": 3602,
+    "sent_bytes": 165660,
+    "recv_bytes": 216120,
+    "first_ts": 1257257895734888,
+    "last_ts": 1257459351468850
+  },
+  "8.141.153.31": {
+    "sent_packets": 2485,
+    "recv_packets": 2989,
+    "sent_bytes": 149100,
+    "recv_bytes": 179340,
+    "first_ts": 1257257896747053,
+    "last_ts": 1257459334763400
+  },
+  "8.157.132.13": {
+    "sent_packets": 2671,
+    "recv_packets": 3443,
+    "sent_bytes": 160260,
+    "recv_bytes": 206580,
+    "first_ts": 1257257897726480,
+    "last_ts": 1257459358069007
+  },
+  "8.178.210.61": {
+    "sent_packets": 2529,
+    "recv_packets": 1117,
+    "sent_bytes": 151740,
+    "recv_bytes": 67020,
+    "first_ts": 1257257898746008,
+    "last_ts": 1257459336771009
+  },
+  "8.179.82.34": {
+    "sent_packets": 1172,
+    "recv_packets": 1300,
+    "sent_bytes": 70320,
+    "recv_bytes": 78000,
+    "first_ts": 1257257899765560,
+    "last_ts": 1257459360267288
+  },
+  "8.199.76.40": {
+    "sent_packets": 2491,
+    "recv_packets": 3018,
+    "sent_bytes": 149460,
+    "recv_bytes": 181080,
+    "first_ts": 1257257900732568,
+    "last_ts": 1257459352667140
+  },
+  "8.208.147.15": {
+    "sent_packets": 1172,
+    "recv_packets": 1474,
+    "sent_bytes": 70320,
+    "recv_bytes": 88440,
+    "first_ts": 1257257901734615,
+    "last_ts": 1257459433470691
+  },
+  "9.81.41.34": {
+    "sent_packets": 1172,
+    "recv_packets": 1989,
+    "sent_bytes": 70320,
+    "recv_bytes": 119340,
+    "first_ts": 1257257902740440,
+    "last_ts": 1257459359269029
+  },
+  "9.88.143.31": {
+    "sent_packets": 1171,
+    "recv_packets": 1105,
+    "sent_bytes": 70260,
+    "recv_bytes": 66300,
+    "first_ts": 1257257903752408,
+    "last_ts": 1257459358869029
+  },
+  "9.182.182.14": {
+    "sent_packets": 2242,
+    "recv_packets": 2426,
+    "sent_bytes": 134520,
+    "recv_bytes": 145560,
+    "first_ts": 1257257904773204,
+    "last_ts": 1257459360267265
+  },
+  "9.196.194.32": {
+    "sent_packets": 2220,
+    "recv_packets": 2407,
+    "sent_bytes": 133200,
+    "recv_bytes": 144420,
+    "first_ts": 1257257905762735,
+    "last_ts": 1257459343776486
+  },
+  "9.248.204.55": {
+    "sent_packets": 1388,
+    "recv_packets": 1816,
+    "sent_bytes": 83280,
+    "recv_bytes": 108960,
+    "first_ts": 1257257906742421,
+    "last_ts": 1257631033658496
+  },
+  "11.6.70.13": {
+    "sent_packets": 1388,
+    "recv_packets": 1520,
+    "sent_bytes": 83280,
+    "recv_bytes": 91200,
+    "first_ts": 1257257907769463,
+    "last_ts": 1257631034678489
+  },
+  "11.88.142.12": {
+    "sent_packets": 1172,
+    "recv_packets": 1029,
+    "sent_bytes": 70320,
+    "recv_bytes": 61740,
+    "first_ts": 1257257908761326,
+    "last_ts": 1257459440470832
+  },
+  "11.134.54.38": {
+    "sent_packets": 1172,
+    "recv_packets": 1173,
+    "sent_bytes": 70320,
+    "recv_bytes": 70380,
+    "first_ts": 1257257909787093,
+    "last_ts": 1257459356867097
+  },
+  "11.202.138.30": {
+    "sent_packets": 1172,
+    "recv_packets": 1570,
+    "sent_bytes": 70320,
+    "recv_bytes": 94200,
+    "first_ts": 1257257910750416,
+    "last_ts": 1257459366267309
+  },
+  "11.220.46.14": {
+    "sent_packets": 1172,
+    "recv_packets": 986,
+    "sent_bytes": 70320,
+    "recv_bytes": 59160,
+    "first_ts": 1257257911780079,
+    "last_ts": 1257459360267258
+  },
+  "11.239.103.20": {
+    "sent_packets": 1172,
+    "recv_packets": 1109,
+    "sent_bytes": 70320,
+    "recv_bytes": 66540,
+    "first_ts": 1257257912779468,
+    "last_ts": 1257459437268922
+  },
+  "11.247.62.26": {
+    "sent_packets": 1172,
+    "recv_packets": 1066,
+    "sent_bytes": 70320,
+    "recv_bytes": 63960,
+    "first_ts": 1257257913768977,
+    "last_ts": 1257459361069061
+  },
+  "12.1.248.28": {
+    "sent_packets": 1172,
+    "recv_packets": 1303,
+    "sent_bytes": 70320,
+    "recv_bytes": 78180,
+    "first_ts": 1257257914778567,
+    "last_ts": 1257459391269733
+  },
+  "12.12.84.37": {
+    "sent_packets": 1901,
+    "recv_packets": 1705,
+    "sent_bytes": 114060,
+    "recv_bytes": 102300,
+    "first_ts": 1257257915758143,
+    "last_ts": 1257459353797051
+  },
+  "12.17.231.15": {
+    "sent_packets": 1172,
+    "recv_packets": 1096,
+    "sent_bytes": 70320,
+    "recv_bytes": 65760,
+    "first_ts": 1257257916763855,
+    "last_ts": 1257459364069136
+  },
+  "12.27.5.69": {
+    "sent_packets": 2056,
+    "recv_packets": 2002,
+    "sent_bytes": 123360,
+    "recv_bytes": 120120,
+    "first_ts": 1257257917777068,
+    "last_ts": 1257459442270888
+  },
+  "14.51.154.31": {
+    "sent_packets": 2192,
+    "recv_packets": 2270,
+    "sent_bytes": 131520,
+    "recv_bytes": 136200,
+    "first_ts": 1257257918786779,
+    "last_ts": 1257459367069189
+  },
+  "14.52.155.19": {
+    "sent_packets": 1923,
+    "recv_packets": 1710,
+    "sent_bytes": 115380,
+    "recv_bytes": 102600,
+    "first_ts": 1257257919783694,
+    "last_ts": 1257459368069206
+  },
+  "14.81.203.35": {
+    "sent_packets": 1172,
+    "recv_packets": 949,
+    "sent_bytes": 70320,
+    "recv_bytes": 56940,
+    "first_ts": 1257257920795714,
+    "last_ts": 1257459369069244
+  },
+  "14.90.67.18": {
+    "sent_packets": 1170,
+    "recv_packets": 999,
+    "sent_bytes": 70200,
+    "recv_bytes": 59940,
+    "first_ts": 1257257921795789,
+    "last_ts": 1257459450471077
+  },
+  "14.105.10.36": {
+    "sent_packets": 2098,
+    "recv_packets": 2047,
+    "sent_bytes": 125880,
+    "recv_bytes": 122820,
+    "first_ts": 1257257922771060,
+    "last_ts": 1257459360818206
+  },
+  "14.115.75.28": {
+    "sent_packets": 1874,
+    "recv_packets": 1597,
+    "sent_bytes": 112440,
+    "recv_bytes": 95820,
+    "first_ts": 1257257923811947,
+    "last_ts": 1257459367467718
+  },
+  "14.221.228.15": {
+    "sent_packets": 1904,
+    "recv_packets": 1655,
+    "sent_bytes": 114240,
+    "recv_bytes": 99300,
+    "first_ts": 1257257924773853,
+    "last_ts": 1257459372469314
+  },
+  "15.56.132.39": {
+    "sent_packets": 1172,
+    "recv_packets": 955,
+    "sent_bytes": 70320,
+    "recv_bytes": 57300,
+    "first_ts": 1257257925801046,
+    "last_ts": 1257459450471081
+  },
+  "15.149.56.11": {
+    "sent_packets": 2022,
+    "recv_packets": 1965,
+    "sent_bytes": 121320,
+    "recv_bytes": 117900,
+    "first_ts": 1257257926802935,
+    "last_ts": 1257459450271069
+  },
+  "15.174.249.16": {
+    "sent_packets": 1949,
+    "recv_packets": 1803,
+    "sent_bytes": 116940,
+    "recv_bytes": 108180,
+    "first_ts": 1257257927782405,
+    "last_ts": 1257459460471295
+  },
+  "15.178.251.26": {
+    "sent_packets": 1972,
+    "recv_packets": 1793,
+    "sent_bytes": 118320,
+    "recv_bytes": 107580,
+    "first_ts": 1257257928801924,
+    "last_ts": 1257459411870214
+  },
+  "15.184.166.14": {
+    "sent_packets": 1172,
+    "recv_packets": 1015,
+    "sent_bytes": 70320,
+    "recv_bytes": 60900,
+    "first_ts": 1257257929789131,
+    "last_ts": 1257459410068292
+  },
+  "15.185.49.16": {
+    "sent_packets": 1172,
+    "recv_packets": 1051,
+    "sent_bytes": 70320,
+    "recv_bytes": 63060,
+    "first_ts": 1257257930798504,
+    "last_ts": 1257459462869479
+  },
+  "15.231.243.19": {
+    "sent_packets": 1388,
+    "recv_packets": 1036,
+    "sent_bytes": 83280,
+    "recv_bytes": 62160,
+    "first_ts": 1257257931810544,
+    "last_ts": 1257631066238923
+  },
+  "16.5.197.28": {
+    "sent_packets": 1388,
+    "recv_packets": 1348,
+    "sent_bytes": 83280,
+    "recv_bytes": 80880,
+    "first_ts": 1257257932796357,
+    "last_ts": 1257631041850556
+  },
+  "16.16.174.14": {
+    "sent_packets": 3154,
+    "recv_packets": 4005,
+    "sent_bytes": 189240,
+    "recv_bytes": 240300,
+    "first_ts": 1257257933809616,
+    "last_ts": 1257631132239019
+  },
+  "16.19.124.18": {
+    "sent_packets": 1172,
+    "recv_packets": 1192,
+    "sent_bytes": 70320,
+    "recv_bytes": 71520,
+    "first_ts": 1257257934819141,
+    "last_ts": 1257459372850467
+  },
+  "16.98.115.22": {
+    "sent_packets": 1918,
+    "recv_packets": 1752,
+    "sent_bytes": 115080,
+    "recv_bytes": 105120,
+    "first_ts": 1257257935818653,
+    "last_ts": 1257459463671389
+  },
+  "16.141.168.14": {
+    "sent_packets": 1888,
+    "recv_packets": 579,
+    "sent_bytes": 113280,
+    "recv_bytes": 34740,
+    "first_ts": 1257257936808220,
+    "last_ts": 1257459374837512
+  },
+  "16.161.221.15": {
+    "sent_packets": 2053,
+    "recv_packets": 2036,
+    "sent_bytes": 123180,
+    "recv_bytes": 122160,
+    "first_ts": 1257257937797699,
+    "last_ts": 1257459469471499
+  },
+  "16.199.43.11": {
+    "sent_packets": 2163,
+    "recv_packets": 2287,
+    "sent_bytes": 129780,
+    "recv_bytes": 137220,
+    "first_ts": 1257257938803525,
+    "last_ts": 1257459466271428
+  },
+  "16.225.81.18": {
+    "sent_packets": 2079,
+    "recv_packets": 2093,
+    "sent_bytes": 124740,
+    "recv_bytes": 125580,
+    "first_ts": 1257257939814283,
+    "last_ts": 1257459394869829
+  },
+  "16.231.228.19": {
+    "sent_packets": 1172,
+    "recv_packets": 1322,
+    "sent_bytes": 70320,
+    "recv_bytes": 79320,
+    "first_ts": 1257257940842592,
+    "last_ts": 1257459378849388
+  },
+  "16.244.78.44": {
+    "sent_packets": 1172,
+    "recv_packets": 1250,
+    "sent_bytes": 70320,
+    "recv_bytes": 75000,
+    "first_ts": 1257257941805862,
+    "last_ts": 1257459379847483
+  },
+  "17.59.230.16": {
+    "sent_packets": 2309,
+    "recv_packets": 2621,
+    "sent_bytes": 138540,
+    "recv_bytes": 157260,
+    "first_ts": 1257257942835450,
+    "last_ts": 1257459470671541
+  },
+  "17.73.109.30": {
+    "sent_packets": 1172,
+    "recv_packets": 1276,
+    "sent_bytes": 70320,
+    "recv_bytes": 76560,
+    "first_ts": 1257257943812606,
+    "last_ts": 1257459459671284
+  },
+  "17.163.65.12": {
+    "sent_packets": 1171,
+    "recv_packets": 1402,
+    "sent_bytes": 70260,
+    "recv_bytes": 84120,
+    "first_ts": 1257257944811996,
+    "last_ts": 1257459417270324
+  },
+  "17.202.87.37": {
+    "sent_packets": 1172,
+    "recv_packets": 1363,
+    "sent_bytes": 70320,
+    "recv_bytes": 81780,
+    "first_ts": 1257257945841644,
+    "last_ts": 1257459465871424
+  },
+  "17.241.216.32": {
+    "sent_packets": 1172,
+    "recv_packets": 1415,
+    "sent_bytes": 70320,
+    "recv_bytes": 84900,
+    "first_ts": 1257257946853517,
+    "last_ts": 1257459418868490
+  },
+  "17.246.169.62": {
+    "sent_packets": 1170,
+    "recv_packets": 1765,
+    "sent_bytes": 70200,
+    "recv_bytes": 105900,
+    "first_ts": 1257257947820528,
+    "last_ts": 1257459463869504
+  },
+  "18.177.218.56": {
+    "sent_packets": 2472,
+    "recv_packets": 2986,
+    "sent_bytes": 148320,
+    "recv_bytes": 179160,
+    "first_ts": 1257257948820079,
+    "last_ts": 1257459428470576
+  },
+  "19.14.122.18": {
+    "sent_packets": 1171,
+    "recv_packets": 1716,
+    "sent_bytes": 70260,
+    "recv_bytes": 102960,
+    "first_ts": 1257257949847496,
+    "last_ts": 1257459465871428
+  },
+  "19.16.150.31": {
+    "sent_packets": 1171,
+    "recv_packets": 1668,
+    "sent_bytes": 70260,
+    "recv_bytes": 100080,
+    "first_ts": 1257257950841620,
+    "last_ts": 1257459470671538
+  },
+  "19.202.221.20": {
+    "sent_packets": 1172,
+    "recv_packets": 1511,
+    "sent_bytes": 70320,
+    "recv_bytes": 90660,
+    "first_ts": 1257257951851150,
+    "last_ts": 1257459467471453
+  },
+  "19.214.138.15": {
+    "sent_packets": 1172,
+    "recv_packets": 1689,
+    "sent_bytes": 70320,
+    "recv_bytes": 101340,
+    "first_ts": 1257257952850886,
+    "last_ts": 1257459472870032
+  },
+  "20.17.228.67": {
+    "sent_packets": 2570,
+    "recv_packets": 3227,
+    "sent_bytes": 154200,
+    "recv_bytes": 193620,
+    "first_ts": 1257257953846613,
+    "last_ts": 1257459421870428
+  },
+  "20.18.5.11": {
+    "sent_packets": 3583,
+    "recv_packets": 5074,
+    "sent_bytes": 214980,
+    "recv_bytes": 304440,
+    "first_ts": 1257257954859766,
+    "last_ts": 1257631101237305
+  },
+  "20.21.128.24": {
+    "sent_packets": 3498,
+    "recv_packets": 4917,
+    "sent_bytes": 209880,
+    "recv_bytes": 295020,
+    "first_ts": 1257257955849431,
+    "last_ts": 1257631125637867
+  },
+  "20.38.7.15": {
+    "sent_packets": 1387,
+    "recv_packets": 2457,
+    "sent_bytes": 83220,
+    "recv_bytes": 147420,
+    "first_ts": 1257257956835101,
+    "last_ts": 1257631082836888
+  },
+  "23.3.252.153": {
+    "sent_packets": 3986,
+    "recv_packets": 8342,
+    "sent_bytes": 391292,
+    "recv_bytes": 11092071,
+    "first_ts": 1257258002558265,
+    "last_ts": 1257627190833625
+  },
+  "172.28.128.5": {
+    "sent_packets": 308,
+    "recv_packets": 421,
+    "sent_bytes": 32790,
+    "recv_bytes": 374909,
+    "first_ts": 1257258002558265,
+    "last_ts": 1257635261721642
+  },
+  "79.239.45.99": {
+    "sent_packets": 18,
+    "recv_packets": 18,
+    "sent_bytes": 1332,
+    "recv_bytes": 1080,
+    "first_ts": 1257258055007447,
+    "last_ts": 1257419257129116
+  },
+  "172.28.194.88": {
+    "sent_packets": 18,
+    "recv_packets": 18,
+    "sent_bytes": 1080,
+    "recv_bytes": 1332,
+    "first_ts": 1257258055007447,
+    "last_ts": 1257419257129116
+  },
+  "130.236.192.227": {
+    "sent_packets": 202,
+    "recv_packets": 296,
+    "sent_bytes": 14612,
+    "recv_bytes": 326013,
+    "first_ts": 1257258104572228,
+    "last_ts": 1257258484012774
+  },
+  "172.28.136.45": {
+    "sent_packets": 8230,
+    "recv_packets": 3834,
+    "sent_bytes": 11080239,
+    "recv_bytes": 255072,
+    "first_ts": 1257258123935359,
+    "last_ts": 1257627190833625
+  },
+  "172.28.128.124": {
+    "sent_packets": 836,
+    "recv_packets": 867,
+    "sent_bytes": 81070,
+    "recv_bytes": 320822,
+    "first_ts": 1257258261745514,
+    "last_ts": 1257586573889295
+  },
+  "201.89.32.16": {
+    "sent_packets": 1185,
+    "recv_packets": 1410,
+    "sent_bytes": 195780,
+    "recv_bytes": 102068,
+    "first_ts": 1257258261745514,
+    "last_ts": 1257431969667688
+  },
+  "68.91.226.37": {
+    "sent_packets": 3156,
+    "recv_packets": 3380,
+    "sent_bytes": 3376395,
+    "recv_bytes": 230568,
+    "first_ts": 1257258271759898,
+    "last_ts": 1257431969667730
+  },
+  "172.28.14.161": {
+    "sent_packets": 2427,
+    "recv_packets": 2223,
+    "sent_bytes": 197757,
+    "recv_bytes": 280940,
+    "first_ts": 1257258275685894,
+    "last_ts": 1257258776838758
+  },
+  "172.28.197.120": {
+    "sent_packets": 37,
+    "recv_packets": 33,
+    "sent_bytes": 2572,
+    "recv_bytes": 22770,
+    "first_ts": 1257258280686698,
+    "last_ts": 1257258435185300
+  },
+  "172.28.213.189": {
+    "sent_packets": 38,
+    "recv_packets": 34,
+    "sent_bytes": 2638,
+    "recv_bytes": 23020,
+    "first_ts": 1257258290960118,
+    "last_ts": 1257258393599348
+  },
+  "77.91.104.22": {
+    "sent_packets": 3174,
+    "recv_packets": 3672,
+    "sent_bytes": 1276068,
+    "recv_bytes": 257043,
+    "first_ts": 1257258291820762,
+    "last_ts": 1257431969670244
+  },
+  "70.98.1.1": {
+    "sent_packets": 104439,
+    "recv_packets": 113771,
+    "sent_bytes": 12254847,
+    "recv_bytes": 9291501,
+    "first_ts": 1257258303860619,
+    "last_ts": 1257431969669964
+  },
+  "64.180.1.1": {
+    "sent_packets": 90196,
+    "recv_packets": 98398,
+    "sent_bytes": 10583981,
+    "recv_bytes": 8036495,
+    "first_ts": 1257258304895323,
+    "last_ts": 1257431969669999
+  },
+  "24.145.1.1": {
+    "sent_packets": 39932,
+    "recv_packets": 43763,
+    "sent_bytes": 4717943,
+    "recv_bytes": 3589608,
+    "first_ts": 1257258307980523,
+    "last_ts": 1257431966675913
+  },
+  "66.200.1.1": {
+    "sent_packets": 50425,
+    "recv_packets": 55108,
+    "sent_bytes": 5952233,
+    "recv_bytes": 4520278,
+    "first_ts": 1257258312064144,
+    "last_ts": 1257431963607007
+  },
+  "172.28.214.102": {
+    "sent_packets": 37,
+    "recv_packets": 33,
+    "sent_bytes": 2572,
+    "recv_bytes": 22452,
+    "first_ts": 1257258316697863,
+    "last_ts": 1257258414019101
+  },
+  "172.28.23.163": {
+    "sent_packets": 36,
+    "recv_packets": 32,
+    "sent_bytes": 2506,
+    "recv_bytes": 19949,
+    "first_ts": 1257258318691010,
+    "last_ts": 1257258424371092
+  },
+  "172.28.3.121": {
+    "sent_packets": 35,
+    "recv_packets": 31,
+    "sent_bytes": 2440,
+    "recv_bytes": 19250,
+    "first_ts": 1257258331693094,
+    "last_ts": 1257258431079812
+  },
+  "172.28.192.134": {
+    "sent_packets": 306,
+    "recv_packets": 211,
+    "sent_bytes": 326129,
+    "recv_bytes": 34430,
+    "first_ts": 1257258362366528,
+    "last_ts": 1257258484012774
+  },
+  "195.171.85.28": {
+    "sent_packets": 468,
+    "recv_packets": 0,
+    "sent_bytes": 29016,
+    "recv_bytes": 0,
+    "first_ts": 1257258382563837,
+    "last_ts": 1257626674637893
+  },
+  "172.28.18.41": {
+    "sent_packets": 0,
+    "recv_packets": 36,
+    "sent_bytes": 0,
+    "recv_bytes": 2232,
+    "first_ts": 1257258382563837,
+    "last_ts": 1257626674637886
+  },
+  "172.28.18.59": {
+    "sent_packets": 0,
+    "recv_packets": 36,
+    "sent_bytes": 0,
+    "recv_bytes": 2232,
+    "first_ts": 1257258382564038,
+    "last_ts": 1257626674127859
+  },
+  "172.28.18.213": {
+    "sent_packets": 0,
+    "recv_packets": 36,
+    "sent_bytes": 0,
+    "recv_bytes": 2232,
+    "first_ts": 1257258382564337,
+    "last_ts": 1257626673617846
+  },
+  "172.28.18.241": {
+    "sent_packets": 0,
+    "recv_packets": 36,
+    "sent_bytes": 0,
+    "recv_bytes": 2232,
+    "first_ts": 1257258382564440,
+    "last_ts": 1257626673617848
+  },
+  "172.28.18.197": {
+    "sent_packets": 0,
+    "recv_packets": 36,
+    "sent_bytes": 0,
+    "recv_bytes": 2232,
+    "first_ts": 1257258382564553,
+    "last_ts": 1257626674637879
+  },
+  "172.28.18.174": {
+    "sent_packets": 0,
+    "recv_packets": 36,
+    "sent_bytes": 0,
+    "recv_bytes": 2232,
+    "first_ts": 1257258382564873,
+    "last_ts": 1257626674637893
+  },
+  "172.28.18.68": {
+    "sent_packets": 0,
+    "recv_packets": 36,
+    "sent_bytes": 0,
+    "recv_bytes": 2232,
+    "first_ts": 1257258382565034,
+    "last_ts": 1257626674127865
+  },
+  "172.28.18.83": {
+    "sent_packets": 0,
+    "recv_packets": 36,
+    "sent_bytes": 0,
+    "recv_bytes": 2232,
+    "first_ts": 1257258382565080,
+    "last_ts": 1257626674127862
+  },
+  "172.28.18.147": {
+    "sent_packets": 0,
+    "recv_packets": 36,
+    "sent_bytes": 0,
+    "recv_bytes": 2232,
+    "first_ts": 1257258382565210,
+    "last_ts": 1257626674127868
+  },
+  "172.28.18.98": {
+    "sent_packets": 0,
+    "recv_packets": 36,
+    "sent_bytes": 0,
+    "recv_bytes": 2232,
+    "first_ts": 1257258382565370,
+    "last_ts": 1257626673617859
+  },
+  "172.28.18.18": {
+    "sent_packets": 0,
+    "recv_packets": 36,
+    "sent_bytes": 0,
+    "recv_bytes": 2232,
+    "first_ts": 1257258383073175,
+    "last_ts": 1257626674637889
+  },
+  "172.28.18.111": {
+    "sent_packets": 0,
+    "recv_packets": 36,
+    "sent_bytes": 0,
+    "recv_bytes": 2232,
+    "first_ts": 1257258383073419,
+    "last_ts": 1257626674637876
+  },
+  "172.28.18.146": {
+    "sent_packets": 0,
+    "recv_packets": 36,
+    "sent_bytes": 0,
+    "recv_bytes": 2232,
+    "first_ts": 1257258383073508,
+    "last_ts": 1257626674637883
+  },
+  "172.28.29.14": {
+    "sent_packets": 76,
+    "recv_packets": 38,
+    "sent_bytes": 67491,
+    "recv_bytes": 2848,
+    "first_ts": 1257258582928194,
+    "last_ts": 1257258904595996
+  },
+  "138.106.196.169": {
+    "sent_packets": 38,
+    "recv_packets": 76,
+    "sent_bytes": 2848,
+    "recv_bytes": 67491,
+    "first_ts": 1257258582928194,
+    "last_ts": 1257258904595996
+  },
+  "172.28.218.164": {
+    "sent_packets": 13833,
+    "recv_packets": 5697,
+    "sent_bytes": 18563126,
+    "recv_bytes": 593998,
+    "first_ts": 1257258631705339,
+    "last_ts": 1257630702636257
+  },
+  "86.136.211.111": {
+    "sent_packets": 5514,
+    "recv_packets": 13640,
+    "sent_bytes": 382380,
+    "recv_bytes": 18550088,
+    "first_ts": 1257258631705339,
+    "last_ts": 1257630702636257
+  },
+  "172.28.212.6": {
+    "sent_packets": 310,
+    "recv_packets": 287,
+    "sent_bytes": 200132,
+    "recv_bytes": 29902,
+    "first_ts": 1257258840705066,
+    "last_ts": 1257653041300954
+  },
+  "20.21.128.84": {
+    "sent_packets": 287,
+    "recv_packets": 310,
+    "sent_bytes": 29902,
+    "recv_bytes": 200132,
+    "first_ts": 1257258840705066,
+    "last_ts": 1257653041300954
+  },
+  "82.144.22.171": {
+    "sent_packets": 312953,
+    "recv_packets": 510654,
+    "sent_bytes": 20665634,
+    "recv_bytes": 560623919,
+    "first_ts": 1257258891621330,
+    "last_ts": 1257537530267844
+  },
+  "172.28.1.5": {
+    "sent_packets": 465,
+    "recv_packets": 521,
+    "sent_bytes": 54239,
+    "recv_bytes": 230735,
+    "first_ts": 1257258891621330,
+    "last_ts": 1257643097732320
+  },
+  "172.28.11.182": {
+    "sent_packets": 10575,
+    "recv_packets": 9651,
+    "sent_bytes": 861791,
+    "recv_bytes": 1246485,
+    "first_ts": 1257258972736484,
+    "last_ts": 1257431534482985
+  },
+  "172.28.132.105": {
+    "sent_packets": 8371,
+    "recv_packets": 7661,
+    "sent_bytes": 680649,
+    "recv_bytes": 1016539,
+    "first_ts": 1257258989730574,
+    "last_ts": 1257431492954511
+  },
+  "172.28.196.167": {
+    "sent_packets": 7241,
+    "recv_packets": 6641,
+    "sent_bytes": 590029,
+    "recv_bytes": 888147,
+    "first_ts": 1257258990731048,
+    "last_ts": 1257431907618150
+  },
+  "172.28.197.210": {
+    "sent_packets": 6845,
+    "recv_packets": 6277,
+    "sent_bytes": 556933,
+    "recv_bytes": 847516,
+    "first_ts": 1257259010734233,
+    "last_ts": 1257431639835563
+  },
+  "172.28.209.155": {
+    "sent_packets": 6682,
+    "recv_packets": 6108,
+    "sent_bytes": 544771,
+    "recv_bytes": 829600,
+    "first_ts": 1257259015739965,
+    "last_ts": 1257431544326210
+  },
+  "172.28.212.207": {
+    "sent_packets": 6924,
+    "recv_packets": 6379,
+    "sent_bytes": 562981,
+    "recv_bytes": 856086,
+    "first_ts": 1257259034737908,
+    "last_ts": 1257431653588389
+  },
+  "172.28.131.125": {
+    "sent_packets": 510731,
+    "recv_packets": 313022,
+    "sent_bytes": 560624657,
+    "recv_bytes": 20823908,
+    "first_ts": 1257259050358332,
+    "last_ts": 1257537530278112
+  },
+  "172.28.218.214": {
+    "sent_packets": 7573,
+    "recv_packets": 6944,
+    "sent_bytes": 616654,
+    "recv_bytes": 922268,
+    "first_ts": 1257259063739168,
+    "last_ts": 1257431969669999
+  },
+  "172.28.219.150": {
+    "sent_packets": 6484,
+    "recv_packets": 5956,
+    "sent_bytes": 527761,
+    "recv_bytes": 817140,
+    "first_ts": 1257259079740220,
+    "last_ts": 1257431969670244
+  },
+  "172.28.220.39": {
+    "sent_packets": 6739,
+    "recv_packets": 6166,
+    "sent_bytes": 547586,
+    "recv_bytes": 836601,
+    "first_ts": 1257259096741239,
+    "last_ts": 1257431969669964
+  },
+  "172.28.27.31": {
+    "sent_packets": 9980,
+    "recv_packets": 9103,
+    "sent_bytes": 813182,
+    "recv_bytes": 1186644,
+    "first_ts": 1257259113742530,
+    "last_ts": 1257431957922650
+  },
+  "172.28.5.81": {
+    "sent_packets": 4608,
+    "recv_packets": 4238,
+    "sent_bytes": 375186,
+    "recv_bytes": 584257,
+    "first_ts": 1257259113743049,
+    "last_ts": 1257431604997613
+  },
+  "172.28.6.9": {
+    "sent_packets": 6104,
+    "recv_packets": 5580,
+    "sent_bytes": 496239,
+    "recv_bytes": 738679,
+    "first_ts": 1257259128750047,
+    "last_ts": 1257431646869311
+  },
+  "16.16.174.174": {
+    "sent_packets": 103,
+    "recv_packets": 89,
+    "sent_bytes": 7096,
+    "recv_bytes": 7033,
+    "first_ts": 1257259196851187,
+    "last_ts": 1257259208408039
+  },
+  "172.28.10.6": {
+    "sent_packets": 89,
+    "recv_packets": 103,
+    "sent_bytes": 7033,
+    "recv_bytes": 7096,
+    "first_ts": 1257259196851187,
+    "last_ts": 1257259208408039
+  },
+  "195.95.157.19": {
+    "sent_packets": 1379,
+    "recv_packets": 2064,
+    "sent_bytes": 99998,
+    "recv_bytes": 2281374,
+    "first_ts": 1257259674586749,
+    "last_ts": 1257495772332010
+  },
+  "172.28.132.148": {
+    "sent_packets": 2129,
+    "recv_packets": 1437,
+    "sent_bytes": 2282073,
+    "recv_bytes": 238370,
+    "first_ts": 1257259802919367,
+    "last_ts": 1257495772342332
+  },
+  "43.79.200.176": {
+    "sent_packets": 465,
+    "recv_packets": 822,
+    "sent_bytes": 142843,
+    "recv_bytes": 783521,
+    "first_ts": 1257259807595830,
+    "last_ts": 1257524720773886
+  },
+  "172.28.11.150": {
+    "sent_packets": 8950,
+    "recv_packets": 8166,
+    "sent_bytes": 729583,
+    "recv_bytes": 1070862,
+    "first_ts": 1257259847780216,
+    "last_ts": 1257372147149153
+  },
+  "172.28.131.186": {
+    "sent_packets": 5616,
+    "recv_packets": 5105,
+    "sent_bytes": 456498,
+    "recv_bytes": 715418,
+    "first_ts": 1257259875733126,
+    "last_ts": 1257372493775553
+  },
+  "172.28.16.212": {
+    "sent_packets": 4697,
+    "recv_packets": 4291,
+    "sent_bytes": 381698,
+    "recv_bytes": 610215,
+    "first_ts": 1257259900734321,
+    "last_ts": 1257372135239123
+  },
+  "172.28.211.212": {
+    "sent_packets": 7676,
+    "recv_packets": 6998,
+    "sent_bytes": 624850,
+    "recv_bytes": 942351,
+    "first_ts": 1257259919735418,
+    "last_ts": 1257372568634592
+  },
+  "130.149.81.31": {
+    "sent_packets": 1982,
+    "recv_packets": 2911,
+    "sent_bytes": 143670,
+    "recv_bytes": 3257035,
+    "first_ts": 1257259948602749,
+    "last_ts": 1257643632313703
+  },
+  "172.28.212.131": {
+    "sent_packets": 5593,
+    "recv_packets": 5111,
+    "sent_bytes": 454953,
+    "recv_bytes": 714211,
+    "first_ts": 1257259948736780,
+    "last_ts": 1257372224456037
+  },
+  "172.28.212.85": {
+    "sent_packets": 6782,
+    "recv_packets": 6190,
+    "sent_bytes": 551739,
+    "recv_bytes": 836580,
+    "first_ts": 1257259958751244,
+    "last_ts": 1257372304408715
+  },
+  "172.28.214.23": {
+    "sent_packets": 9727,
+    "recv_packets": 8870,
+    "sent_bytes": 791568,
+    "recv_bytes": 1163350,
+    "first_ts": 1257259975739063,
+    "last_ts": 1257372578697315
+  },
+  "172.28.20.79": {
+    "sent_packets": 89,
+    "recv_packets": 80,
+    "sent_bytes": 69601,
+    "recv_bytes": 8632,
+    "first_ts": 1257259984677779,
+    "last_ts": 1257512858588644
+  },
+  "169.197.145.201": {
+    "sent_packets": 80,
+    "recv_packets": 89,
+    "sent_bytes": 8632,
+    "recv_bytes": 69601,
+    "first_ts": 1257259984677779,
+    "last_ts": 1257512858588644
+  },
+  "172.28.2.148": {
+    "sent_packets": 6502,
+    "recv_packets": 5938,
+    "sent_bytes": 528915,
+    "recv_bytes": 800746,
+    "first_ts": 1257260004740347,
+    "last_ts": 1257372348769586
+  },
+  "172.28.222.131": {
+    "sent_packets": 6775,
+    "recv_packets": 6197,
+    "sent_bytes": 550655,
+    "recv_bytes": 840414,
+    "first_ts": 1257260018741361,
+    "last_ts": 1257372239472306
+  },
+  "172.28.13.198": {
+    "sent_packets": 8862,
+    "recv_packets": 8093,
+    "sent_bytes": 722954,
+    "recv_bytes": 1064711,
+    "first_ts": 1257260032742590,
+    "last_ts": 1257372265497900
+  },
+  "172.28.130.107": {
+    "sent_packets": 10055,
+    "recv_packets": 9177,
+    "sent_bytes": 820577,
+    "recv_bytes": 1167567,
+    "first_ts": 1257260042743317,
+    "last_ts": 1257372276583608
+  },
+  "172.28.194.173": {
+    "sent_packets": 7657,
+    "recv_packets": 6995,
+    "sent_bytes": 623564,
+    "recv_bytes": 911730,
+    "first_ts": 1257260057751995,
+    "last_ts": 1257372285341550
+  },
+  "32.213.228.43": {
+    "sent_packets": 18,
+    "recv_packets": 18,
+    "sent_bytes": 1080,
+    "recv_bytes": 1080,
+    "first_ts": 1257260133961673,
+    "last_ts": 1257515736456599
+  },
+  "172.28.218.123": {
+    "sent_packets": 18,
+    "recv_packets": 18,
+    "sent_bytes": 1080,
+    "recv_bytes": 1080,
+    "first_ts": 1257260133961673,
+    "last_ts": 1257515736456599
+  },
+  "172.28.6.134": {
+    "sent_packets": 3004,
+    "recv_packets": 2065,
+    "sent_bytes": 3257793,
+    "recv_bytes": 341310,
+    "first_ts": 1257260186498282,
+    "last_ts": 1257643632322094
+  },
+  "212.18.56.231": {
+    "sent_packets": 81,
+    "recv_packets": 129,
+    "sent_bytes": 21458,
+    "recv_bytes": 112700,
+    "first_ts": 1257260637600261,
+    "last_ts": 1257261027778197
+  },
+  "172.28.13.91": {
+    "sent_packets": 115,
+    "recv_packets": 61,
+    "sent_bytes": 111184,
+    "recv_bytes": 4358,
+    "first_ts": 1257260700828788,
+    "last_ts": 1257261027778197
+  },
+  "62.197.83.31": {
+    "sent_packets": 230,
+    "recv_packets": 655,
+    "sent_bytes": 31297,
+    "recv_bytes": 871881,
+    "first_ts": 1257260864606276,
+    "last_ts": 1257261217250152
+  },
+  "34.252.80.110": {
+    "sent_packets": 317,
+    "recv_packets": 957,
+    "sent_bytes": 37376,
+    "recv_bytes": 1204481,
+    "first_ts": 1257260891606620,
+    "last_ts": 1257261931369089
+  },
+  "172.28.197.133": {
+    "sent_packets": 641,
+    "recv_packets": 211,
+    "sent_bytes": 870416,
+    "recv_bytes": 14266,
+    "first_ts": 1257260909018302,
+    "last_ts": 1257261217250152
+  },
+  "172.28.131.132": {
+    "sent_packets": 439,
+    "recv_packets": 128,
+    "sent_bytes": 561601,
+    "recv_bytes": 8958,
+    "first_ts": 1257260981672950,
+    "last_ts": 1257261931369089
+  },
+  "172.28.22.159": {
+    "sent_packets": 47796,
+    "recv_packets": 29749,
+    "sent_bytes": 52895298,
+    "recv_bytes": 1983905,
+    "first_ts": 1257260996716427,
+    "last_ts": 1257261499384100
+  },
+  "185.23.238.137": {
+    "sent_packets": 29730,
+    "recv_packets": 47776,
+    "sent_bytes": 1962698,
+    "recv_bytes": 52893948,
+    "first_ts": 1257260996716427,
+    "last_ts": 1257261499379934
+  },
+  "212.45.250.61": {
+    "sent_packets": 5081,
+    "recv_packets": 16251,
+    "sent_bytes": 448206,
+    "recv_bytes": 21455753,
+    "first_ts": 1257261048623774,
+    "last_ts": 1257635895748164
+  },
+  "172.28.30.36": {
+    "sent_packets": 502,
+    "recv_packets": 169,
+    "sent_bytes": 641277,
+    "recv_bytes": 11324,
+    "first_ts": 1257261410830140,
+    "last_ts": 1257261771625990
+  },
+  "143.244.155.163": {
+    "sent_packets": 84,
+    "recv_packets": 76,
+    "sent_bytes": 8968,
+    "recv_bytes": 6232,
+    "first_ts": 1257261764058893,
+    "last_ts": 1257619604052134
+  },
+  "172.28.32.14": {
+    "sent_packets": 76,
+    "recv_packets": 84,
+    "sent_bytes": 6232,
+    "recv_bytes": 8968,
+    "first_ts": 1257261764058893,
+    "last_ts": 1257619604052134
+  },
+  "172.28.220.52": {
+    "sent_packets": 298,
+    "recv_packets": 186,
+    "sent_bytes": 325597,
+    "recv_bytes": 32779,
+    "first_ts": 1257261931715003,
+    "last_ts": 1257262088616558
+  },
+  "134.96.34.207": {
+    "sent_packets": 166,
+    "recv_packets": 277,
+    "sent_bytes": 11506,
+    "recv_bytes": 324181,
+    "first_ts": 1257261931715003,
+    "last_ts": 1257262088616558
+  },
+  "172.28.214.210": {
+    "sent_packets": 8193,
+    "recv_packets": 2069,
+    "sent_bytes": 12329416,
+    "recv_bytes": 157250,
+    "first_ts": 1257262165726116,
+    "last_ts": 1257262567869377
+  },
+  "180.165.34.103": {
+    "sent_packets": 2051,
+    "recv_packets": 8174,
+    "sent_bytes": 136108,
+    "recv_bytes": 12328132,
+    "first_ts": 1257262165726116,
+    "last_ts": 1257262567869377
+  },
+  "16.225.81.115": {
+    "sent_packets": 197,
+    "recv_packets": 427,
+    "sent_bytes": 29195,
+    "recv_bytes": 540215,
+    "first_ts": 1257262492652099,
+    "last_ts": 1257263041651046
+  },
+  "172.28.5.153": {
+    "sent_packets": 413,
+    "recv_packets": 177,
+    "sent_bytes": 538697,
+    "recv_bytes": 12097,
+    "first_ts": 1257262590717622,
+    "last_ts": 1257263041651046
+  },
+  "172.28.220.68": {
+    "sent_packets": 268,
+    "recv_packets": 136,
+    "sent_bytes": 323618,
+    "recv_bytes": 29479,
+    "first_ts": 1257263067774134,
+    "last_ts": 1257263406502635
+  },
+  "80.37.24.25": {
+    "sent_packets": 116,
+    "recv_packets": 247,
+    "sent_bytes": 8206,
+    "recv_bytes": 322202,
+    "first_ts": 1257263067774134,
+    "last_ts": 1257263406491083
+  },
+  "25.178.184.105": {
+    "sent_packets": 585,
+    "recv_packets": 450,
+    "sent_bytes": 414315,
+    "recv_bytes": 59625,
+    "first_ts": 1257263239840720,
+    "last_ts": 1257542944849845
+  },
+  "172.28.28.128": {
+    "sent_packets": 250,
+    "recv_packets": 330,
+    "sent_bytes": 33149,
+    "recv_bytes": 233425,
+    "first_ts": 1257263239840720,
+    "last_ts": 1257586561849958
+  },
+  "172.28.22.186": {
+    "sent_packets": 250,
+    "recv_packets": 331,
+    "sent_bytes": 33149,
+    "recv_bytes": 234598,
+    "first_ts": 1257263242857558,
+    "last_ts": 1257586564859840
+  },
+  "172.28.6.119": {
+    "sent_packets": 250,
+    "recv_packets": 328,
+    "sent_bytes": 33125,
+    "recv_bytes": 230397,
+    "first_ts": 1257263245871674,
+    "last_ts": 1257586567869718
+  },
+  "172.28.20.14": {
+    "sent_packets": 260,
+    "recv_packets": 342,
+    "sent_bytes": 34450,
+    "recv_bytes": 245097,
+    "first_ts": 1257263248884358,
+    "last_ts": 1257586570879464
+  },
+  "172.28.9.211": {
+    "sent_packets": 1490,
+    "recv_packets": 969,
+    "sent_bytes": 1628008,
+    "recv_bytes": 166464,
+    "first_ts": 1257264221701692,
+    "last_ts": 1257420683771981
+  },
+  "40.112.195.63": {
+    "sent_packets": 877,
+    "recv_packets": 1393,
+    "sent_bytes": 60632,
+    "recv_bytes": 1621456,
+    "first_ts": 1257264221701692,
+    "last_ts": 1257420683771981
+  },
+  "172.28.12.167": {
+    "sent_packets": 3903,
+    "recv_packets": 3575,
+    "sent_bytes": 316847,
+    "recv_bytes": 506025,
+    "first_ts": 1257264239781182,
+    "last_ts": 1257425838113498
+  },
+  "172.28.12.45": {
+    "sent_packets": 7207,
+    "recv_packets": 6604,
+    "sent_bytes": 587303,
+    "recv_bytes": 866638,
+    "first_ts": 1257264254758892,
+    "last_ts": 1257425990122016
+  },
+  "172.28.128.218": {
+    "sent_packets": 8374,
+    "recv_packets": 7700,
+    "sent_bytes": 682118,
+    "recv_bytes": 1008142,
+    "first_ts": 1257264266760274,
+    "last_ts": 1257426281454650
+  },
+  "172.28.133.166": {
+    "sent_packets": 7996,
+    "recv_packets": 7331,
+    "sent_bytes": 651719,
+    "recv_bytes": 964572,
+    "first_ts": 1257264280773508,
+    "last_ts": 1257425908982166
+  },
+  "172.28.133.17": {
+    "sent_packets": 6550,
+    "recv_packets": 6000,
+    "sent_bytes": 532995,
+    "recv_bytes": 792254,
+    "first_ts": 1257264302764878,
+    "last_ts": 1257425952664994
+  },
+  "172.28.15.104": {
+    "sent_packets": 4895,
+    "recv_packets": 4502,
+    "sent_bytes": 397727,
+    "recv_bytes": 621456,
+    "first_ts": 1257264328756026,
+    "last_ts": 1257426319730884
+  },
+  "172.28.16.39": {
+    "sent_packets": 5358,
+    "recv_packets": 4950,
+    "sent_bytes": 436493,
+    "recv_bytes": 667323,
+    "first_ts": 1257264356761829,
+    "last_ts": 1257425947080265
+  },
+  "172.28.198.83": {
+    "sent_packets": 5283,
+    "recv_packets": 4849,
+    "sent_bytes": 429787,
+    "recv_bytes": 656808,
+    "first_ts": 1257264376763148,
+    "last_ts": 1257425957986723
+  },
+  "172.28.211.200": {
+    "sent_packets": 4453,
+    "recv_packets": 4119,
+    "sent_bytes": 361766,
+    "recv_bytes": 567083,
+    "first_ts": 1257264391787952,
+    "last_ts": 1257425951332069
+  },
+  "172.28.218.87": {
+    "sent_packets": 8270,
+    "recv_packets": 7614,
+    "sent_bytes": 673393,
+    "recv_bytes": 986345,
+    "first_ts": 1257264395777757,
+    "last_ts": 1257426319729075
+  },
+  "172.28.27.162": {
+    "sent_packets": 4623,
+    "recv_packets": 4236,
+    "sent_bytes": 375649,
+    "recv_bytes": 584176,
+    "first_ts": 1257264424774283,
+    "last_ts": 1257426046495005
+  },
+  "172.28.6.47": {
+    "sent_packets": 5421,
+    "recv_packets": 4977,
+    "sent_bytes": 440839,
+    "recv_bytes": 671715,
+    "first_ts": 1257264445771457,
+    "last_ts": 1257426059975736
+  },
+  "172.28.13.29": {
+    "sent_packets": 3921,
+    "recv_packets": 3587,
+    "sent_bytes": 318998,
+    "recv_bytes": 505339,
+    "first_ts": 1257264460787285,
+    "last_ts": 1257426070698704
+  },
+  "172.28.3.56": {
+    "sent_packets": 4780,
+    "recv_packets": 4379,
+    "sent_bytes": 389025,
+    "recv_bytes": 584243,
+    "first_ts": 1257264472776571,
+    "last_ts": 1257426088647409
+  },
+  "172.28.3.242": {
+    "sent_packets": 6287,
+    "recv_packets": 5764,
+    "sent_bytes": 512138,
+    "recv_bytes": 741523,
+    "first_ts": 1257264473774884,
+    "last_ts": 1257426082761944
+  },
+  "44.239.223.135": {
+    "sent_packets": 1174,
+    "recv_packets": 2923,
+    "sent_bytes": 189724,
+    "recv_bytes": 3704070,
+    "first_ts": 1257264513608170,
+    "last_ts": 1257554882593098
+  },
+  "115.240.12.124": {
+    "sent_packets": 453,
+    "recv_packets": 542,
+    "sent_bytes": 48009,
+    "recv_bytes": 456294,
+    "first_ts": 1257264663610058,
+    "last_ts": 1257625625994088
+  },
+  "172.28.128.21": {
+    "sent_packets": 2825,
+    "recv_packets": 1040,
+    "sent_bytes": 3693507,
+    "recv_bytes": 70425,
+    "first_ts": 1257264688867823,
+    "last_ts": 1257554882593098
+  },
+  "153.25.121.118": {
+    "sent_packets": 1086,
+    "recv_packets": 820,
+    "sent_bytes": 768732,
+    "recv_bytes": 108698,
+    "first_ts": 1257264715824145,
+    "last_ts": 1257586573889295
+  },
+  "172.28.10.68": {
+    "sent_packets": 645,
+    "recv_packets": 544,
+    "sent_bytes": 456767,
+    "recv_bytes": 265397,
+    "first_ts": 1257264853594005,
+    "last_ts": 1257625625997983
+  },
+  "172.28.132.25": {
+    "sent_packets": 6260,
+    "recv_packets": 5716,
+    "sent_bytes": 509748,
+    "recv_bytes": 762963,
+    "first_ts": 1257265037760627,
+    "last_ts": 1257379124204152
+  },
+  "44.29.203.5": {
+    "sent_packets": 248,
+    "recv_packets": 297,
+    "sent_bytes": 40784,
+    "recv_bytes": 21502,
+    "first_ts": 1257265037760627,
+    "last_ts": 1257379340251326
+  },
+  "172.28.198.147": {
+    "sent_packets": 4342,
+    "recv_packets": 3969,
+    "sent_bytes": 353521,
+    "recv_bytes": 558601,
+    "first_ts": 1257265046750888,
+    "last_ts": 1257379095890835
+  },
+  "64.222.102.58": {
+    "sent_packets": 686,
+    "recv_packets": 735,
+    "sent_bytes": 738328,
+    "recv_bytes": 50127,
+    "first_ts": 1257265047764323,
+    "last_ts": 1257379340251340
+  },
+  "172.28.22.122": {
+    "sent_packets": 4241,
+    "recv_packets": 3872,
+    "sent_bytes": 344834,
+    "recv_bytes": 543592,
+    "first_ts": 1257265055746391,
+    "last_ts": 1257379107937365
+  },
+  "172.28.2.98": {
+    "sent_packets": 4210,
+    "recv_packets": 3848,
+    "sent_bytes": 341917,
+    "recv_bytes": 536529,
+    "first_ts": 1257265056748965,
+    "last_ts": 1257379125907336
+  },
+  "172.28.6.170": {
+    "sent_packets": 9772,
+    "recv_packets": 8940,
+    "sent_bytes": 797120,
+    "recv_bytes": 1141558,
+    "first_ts": 1257265067743098,
+    "last_ts": 1257379340252211
+  },
+  "123.44.92.173": {
+    "sent_packets": 633,
+    "recv_packets": 731,
+    "sent_bytes": 258313,
+    "recv_bytes": 51153,
+    "first_ts": 1257265067786388,
+    "last_ts": 1257379340251347
+  },
+  "172.28.6.48": {
+    "sent_packets": 4716,
+    "recv_packets": 4326,
+    "sent_bytes": 384151,
+    "recv_bytes": 593066,
+    "first_ts": 1257265086729783,
+    "last_ts": 1257379163079032
+  },
+  "172.28.8.210": {
+    "sent_packets": 3109,
+    "recv_packets": 2845,
+    "sent_bytes": 252100,
+    "recv_bytes": 423315,
+    "first_ts": 1257265105724683,
+    "last_ts": 1257379173470442
+  },
+  "172.28.3.39": {
+    "sent_packets": 6548,
+    "recv_packets": 6000,
+    "sent_bytes": 534150,
+    "recv_bytes": 770670,
+    "first_ts": 1257265134711500,
+    "last_ts": 1257379312499203
+  },
+  "172.28.3.248": {
+    "sent_packets": 2563,
+    "recv_packets": 2343,
+    "sent_bytes": 207612,
+    "recv_bytes": 351023,
+    "first_ts": 1257265162720155,
+    "last_ts": 1257379216157224
+  },
+  "172.28.130.83": {
+    "sent_packets": 7979,
+    "recv_packets": 7280,
+    "sent_bytes": 649972,
+    "recv_bytes": 911923,
+    "first_ts": 1257265183716501,
+    "last_ts": 1257379237123508
+  },
+  "116.70.60.210": {
+    "sent_packets": 108,
+    "recv_packets": 103,
+    "sent_bytes": 15172,
+    "recv_bytes": 10452,
+    "first_ts": 1257267151585602,
+    "last_ts": 1257565709754384
+  },
+  "172.28.219.74": {
+    "sent_packets": 157,
+    "recv_packets": 156,
+    "sent_bytes": 10836,
+    "recv_bytes": 133668,
+    "first_ts": 1257267414403257,
+    "last_ts": 1257565709754384
+  },
+  "113.193.88.44": {
+    "sent_packets": 8,
+    "recv_packets": 8,
+    "sent_bytes": 616,
+    "recv_bytes": 480,
+    "first_ts": 1257328501980467,
+    "last_ts": 1257625355924744
+  },
+  "172.28.163.165": {
+    "sent_packets": 8,
+    "recv_packets": 8,
+    "sent_bytes": 480,
+    "recv_bytes": 616,
+    "first_ts": 1257328501980467,
+    "last_ts": 1257625355924744
+  }
+}
