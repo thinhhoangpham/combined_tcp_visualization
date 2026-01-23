@@ -561,16 +561,11 @@
                 </div>
             </div>
         </div>
-        <div class="control-group" id="resolutionIndicatorGroup" style="display: none;">
-            <label>Data Resolution</label>
+        <div class="control-group" id="zoomIndicatorGroup">
+            <label>Zoom Level</label>
             <div style="border: 1px solid #dee2e6; padding: 10px; background: white; border-radius: 4px; font-size: 12px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span id="resolutionLevel" style="font-weight: bold; color: #2c3e50;">-</span>
-                    <span id="resolutionDetails" style="font-size: 10px; color: #666;"></span>
-                </div>
-                <div style="color:#666; font-size:10px; margin-top:6px;">
-                    Resolution adjusts automatically based on zoom level.
-                </div>
+                <div id="zoomTimeRange" style="font-weight: bold; color: #2c3e50; margin-bottom: 4px;">-</div>
+                <div id="zoomResolution" style="font-size: 11px; color: #666;"></div>
             </div>
         </div>
         <button id="resetView">Reset View</button>

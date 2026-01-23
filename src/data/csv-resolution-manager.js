@@ -1,6 +1,6 @@
 // src/data/csv-resolution-manager.js - CSV-based Multi-Resolution Data Manager
 // Manages zoom-level dependent data loading from CSV resolution files
-// Supports: seconds (1s bins), milliseconds (1ms bins), raw (microsecond packets)
+// Supports: hours, minutes, seconds, 100ms, 10ms, 1ms bins, raw (microsecond packets)
 
 /**
  * LRU Cache for storing loaded chunks
@@ -43,28 +43,93 @@ class LRUCache {
 }
 
 /**
- * Resolution thresholds in microseconds
- * These determine which data resolution to use based on visible time range
+ * Single configuration for all resolution levels.
+ * Order matters: first match wins (check from top to bottom).
+ * To add a new resolution, just add an entry here - no other code changes needed.
+ *
+ * Resolution thresholds aligned with overview chart's adaptive loading (flow_bins_index.json):
+ * - Overview uses 1min when range <= 120 minutes
+ * - Overview uses hour when range > 7200 minutes (5 days)
+ *
+ * Packet view thresholds:
+ * - hours: used when viewing > 120 minutes (matches overview switching to coarser)
+ * - minutes: used when viewing > 10 minutes (matches overview's 1min range)
+ * - seconds: used when viewing > 1 minute
+ * - 100ms: used when viewing > 10 seconds
+ * - 10ms: used when viewing > 1 second
+ * - 1ms: used when viewing > 100ms
+ * - raw: used when viewing < 100ms (individual packets)
  */
-const RESOLUTION_THRESHOLDS = {
-    // If visible range > 60 seconds, use second-level aggregates
-    SECONDS: 60 * 1_000_000,  // 60 seconds in microseconds
+const RESOLUTION_CONFIG = [
+    {
+        name: 'hours',
+        dirName: 'hours',
+        threshold: 120 * 60 * 1_000_000, // > 120 minutes visible: use hours (matches overview 1min->hour transition)
+        binSize: 3_600_000_000,          // 1 hour in microseconds
+        preBinned: true,
+        isSingleFile: true,              // hours uses a single data.csv
+        cacheSize: 0                     // no cache needed, loaded once
+    },
+    {
+        name: 'minutes',
+        dirName: 'minutes',
+        threshold: 10 * 60 * 1_000_000,  // > 10 minutes visible: use minutes (matches overview 1s->1min transition)
+        binSize: 60_000_000,             // 1 minute in microseconds
+        preBinned: true,
+        isSingleFile: true,              // minutes uses a single data.csv
+        cacheSize: 0                     // no cache needed, loaded once
+    },
+    {
+        name: 'seconds',
+        dirName: 'seconds',
+        threshold: 60 * 1_000_000,       // > 60s visible: use seconds
+        binSize: 1_000_000,              // 1 second in microseconds
+        preBinned: true,
+        isSingleFile: true,              // seconds uses a single data.csv
+        cacheSize: 0                     // no cache needed, loaded once
+    },
+    {
+        name: '100ms',
+        dirName: '100ms',
+        threshold: 10 * 1_000_000,       // > 10s visible: use 100ms
+        binSize: 100_000,                // 100ms in microseconds
+        preBinned: true,
+        isSingleFile: false,
+        cacheSize: 30
+    },
+    {
+        name: '10ms',
+        dirName: '10ms',
+        threshold: 1 * 1_000_000,        // > 1s visible: use 10ms
+        binSize: 10_000,                 // 10ms in microseconds
+        preBinned: true,
+        isSingleFile: false,
+        cacheSize: 40
+    },
+    {
+        name: '1ms',
+        dirName: '1ms',
+        threshold: 100_000,              // > 100ms visible: use 1ms
+        binSize: 1_000,                  // 1ms in microseconds
+        preBinned: true,
+        isSingleFile: false,
+        cacheSize: 50
+    },
+    {
+        name: 'raw',
+        dirName: 'raw',
+        threshold: 0,                    // < 100ms visible: use raw
+        binSize: 1,                      // individual packets
+        preBinned: false,
+        isSingleFile: false,
+        cacheSize: 50
+    }
+];
 
-    // If visible range 1s - 60s, use millisecond-level aggregation
-    MILLISECONDS: 1 * 1_000_000,  // 1 second in microseconds
-
-    // If visible range < 1 second, show raw microsecond packets
-    RAW: 0
-};
-
-/**
- * Resolution levels
- */
-const RESOLUTION = {
-    SECONDS: 'seconds',
-    MILLISECONDS: 'milliseconds',
-    RAW: 'raw'
-};
+// Build lookup map for quick access by name
+const RESOLUTION_BY_NAME = Object.fromEntries(
+    RESOLUTION_CONFIG.map(r => [r.name, r])
+);
 
 /**
  * CSV-based Multi-Resolution Data Manager
@@ -76,21 +141,23 @@ export class CSVResolutionManager {
         this.folderHandle = null;
         this.resolutionsHandle = null;
 
-        // Index data from index.json files
-        this.secondsIndex = null;
-        this.millisecondsIndex = null;
-        this.rawIndex = null;
+        // Dynamic storage keyed by resolution name
+        this.indices = new Map();      // resolution name -> index data
+        this.caches = new Map();       // resolution name -> LRUCache
+        this.singleFileData = new Map(); // resolution name -> data (for isSingleFile resolutions)
 
-        // Cached data
-        this.secondsData = null;  // Full seconds data (small, loaded once)
-        this.millisecondsCache = new LRUCache(30);  // Chunk cache
-        this.rawCache = new LRUCache(50);  // Chunk cache
+        // Initialize caches based on config
+        for (const res of RESOLUTION_CONFIG) {
+            if (!res.isSingleFile && res.cacheSize > 0) {
+                this.caches.set(res.name, new LRUCache(res.cacheSize));
+            }
+        }
 
         // Loading state
         this.loadingChunks = new Set();
 
         // Current state
-        this.currentResolution = RESOLUTION.SECONDS;
+        this.currentResolution = RESOLUTION_CONFIG[0].name;
         this.timeExtent = null;
 
         // Hysteresis to prevent flickering
@@ -106,7 +173,7 @@ export class CSVResolutionManager {
     /**
      * Initialize the resolution manager with a folder handle
      * @param {FileSystemDirectoryHandle} folderHandle - Folder containing resolutions/
-     * @returns {Promise<Array>} Initial seconds-level data
+     * @returns {Promise<Array>} Initial data from first resolution level
      */
     async init(folderHandle) {
         this.folderHandle = folderHandle;
@@ -117,15 +184,17 @@ export class CSVResolutionManager {
             // Get resolutions directory handle
             this.resolutionsHandle = await folderHandle.getDirectoryHandle('resolutions');
 
-            // Load all index files
+            // Load all index files based on config
             await this._loadIndices();
 
-            // Load seconds data (small, always in memory)
-            await this._loadSecondsData();
+            // Load single-file resolution data (e.g., seconds)
+            await this._loadSingleFileData();
 
-            console.log(`[CSVResManager] Initialized with ${this.secondsData?.length || 0} second bins`);
+            const firstRes = RESOLUTION_CONFIG[0].name;
+            const initialData = this.singleFileData.get(firstRes) || [];
+            console.log(`[CSVResManager] Initialized with ${initialData.length} ${firstRes} bins`);
 
-            return this.secondsData;
+            return initialData;
         } catch (err) {
             console.error('[CSVResManager] Initialization failed:', err);
             throw err;
@@ -133,80 +202,72 @@ export class CSVResolutionManager {
     }
 
     /**
-     * Load all resolution index files
+     * Load all resolution index files based on RESOLUTION_CONFIG
      * @private
      */
     async _loadIndices() {
-        try {
-            // Load seconds index
-            const secondsDir = await this.resolutionsHandle.getDirectoryHandle('seconds');
-            const secondsIndexFile = await secondsDir.getFileHandle('index.json');
-            const secondsIndexData = await (await secondsIndexFile.getFile()).text();
-            this.secondsIndex = JSON.parse(secondsIndexData);
-            console.log(`[CSVResManager] Loaded seconds index: ${this.secondsIndex.total_count} bins`);
+        for (const res of RESOLUTION_CONFIG) {
+            try {
+                const resDir = await this.resolutionsHandle.getDirectoryHandle(res.dirName);
+                const indexFile = await resDir.getFileHandle('index.json');
+                const indexData = await (await indexFile.getFile()).text();
+                const index = JSON.parse(indexData);
+                this.indices.set(res.name, index);
 
-            // Set time extent from seconds index
-            this.timeExtent = [
-                this.secondsIndex.time_range.start,
-                this.secondsIndex.time_range.end
-            ];
-        } catch (err) {
-            console.warn('[CSVResManager] Failed to load seconds index:', err);
-        }
+                const count = res.isSingleFile ? index.total_count : (index.chunks?.length || 0);
+                console.log(`[CSVResManager] Loaded ${res.name} index: ${count} ${res.isSingleFile ? 'bins' : 'chunks'}`);
 
-        try {
-            // Load milliseconds index
-            const msDir = await this.resolutionsHandle.getDirectoryHandle('milliseconds');
-            const msIndexFile = await msDir.getFileHandle('index.json');
-            const msIndexData = await (await msIndexFile.getFile()).text();
-            this.millisecondsIndex = JSON.parse(msIndexData);
-            console.log(`[CSVResManager] Loaded milliseconds index: ${this.millisecondsIndex.chunks?.length || 0} chunks`);
-        } catch (err) {
-            console.warn('[CSVResManager] Failed to load milliseconds index:', err);
-        }
-
-        try {
-            // Load raw index
-            const rawDir = await this.resolutionsHandle.getDirectoryHandle('raw');
-            const rawIndexFile = await rawDir.getFileHandle('index.json');
-            const rawIndexData = await (await rawIndexFile.getFile()).text();
-            this.rawIndex = JSON.parse(rawIndexData);
-            console.log(`[CSVResManager] Loaded raw index: ${this.rawIndex.chunks?.length || 0} chunks`);
-        } catch (err) {
-            console.warn('[CSVResManager] Failed to load raw index:', err);
+                // Set time extent from first resolution with valid time_range
+                if (!this.timeExtent && index.time_range) {
+                    this.timeExtent = [index.time_range.start, index.time_range.end];
+                }
+            } catch (err) {
+                console.warn(`[CSVResManager] Failed to load ${res.name} index:`, err);
+            }
         }
     }
 
     /**
-     * Load seconds-level data (small, loaded once)
+     * Load data for single-file resolutions (e.g., seconds)
      * @private
      */
-    async _loadSecondsData() {
-        if (!this.secondsIndex) return;
+    async _loadSingleFileData() {
+        for (const res of RESOLUTION_CONFIG) {
+            if (!res.isSingleFile) continue;
 
-        try {
-            const secondsDir = await this.resolutionsHandle.getDirectoryHandle('seconds');
-            const dataFile = await secondsDir.getFileHandle(this.secondsIndex.data_file || 'data.csv');
-            const csvText = await (await dataFile.getFile()).text();
+            const index = this.indices.get(res.name);
+            if (!index) continue;
 
-            this.secondsData = this._parseCSV(csvText);
-            console.log(`[CSVResManager] Loaded ${this.secondsData.length} seconds bins`);
-        } catch (err) {
-            console.error('[CSVResManager] Failed to load seconds data:', err);
-            this.secondsData = [];
+            try {
+                const resDir = await this.resolutionsHandle.getDirectoryHandle(res.dirName);
+                const dataFile = await resDir.getFileHandle(index.data_file || 'data.csv');
+                const csvText = await (await dataFile.getFile()).text();
+
+                const data = this._parseCSV(csvText, res);
+                this.singleFileData.set(res.name, data);
+                console.log(`[CSVResManager] Loaded ${data.length} ${res.name} bins`);
+            } catch (err) {
+                console.error(`[CSVResManager] Failed to load ${res.name} data:`, err);
+                this.singleFileData.set(res.name, []);
+            }
         }
     }
 
     /**
      * Parse CSV text into array of objects
+     * @param {string} csvText - CSV content
+     * @param {Object} resConfig - Resolution config object from RESOLUTION_CONFIG
      * @private
      */
-    _parseCSV(csvText) {
+    _parseCSV(csvText, resConfig = null) {
         const lines = csvText.split('\n').filter(line => line.trim());
         if (lines.length < 2) return [];
 
         const headers = lines[0].split(',').map(h => h.trim());
         const data = [];
+        const binSize = resConfig?.binSize || 1_000_000;
+        const preBinned = resConfig?.preBinned !== false;
+        const resName = resConfig?.name || 'unknown';
 
         for (let i = 1; i < lines.length; i++) {
             const values = lines[i].split(',');
@@ -218,7 +279,7 @@ export class CSVResolutionManager {
                 let value = values[j]?.trim() || '';
 
                 // Type conversion
-                if (['timestamp', 'bin_start', 'bin_end', 'count', 'total_bytes'].includes(header)) {
+                if (['timestamp', 'bin_start', 'bin_end', 'count', 'total_bytes', 'src_port', 'dst_port', 'flags', 'length'].includes(header)) {
                     value = parseInt(value) || 0;
                 }
 
@@ -226,13 +287,13 @@ export class CSVResolutionManager {
             }
 
             // Add binned flag and compute additional properties
-            row.binned = true;
+            row.binned = preBinned;
             row.binStart = row.bin_start || row.timestamp;
-            row.binEnd = row.bin_end || row.timestamp + 1_000_000;
+            row.binEnd = row.bin_end || (row.timestamp + binSize);
             row.binCenter = Math.floor((row.binStart + row.binEnd) / 2);
             row.flagType = row.flag_type || 'OTHER';
-            row.preBinnedSize = row.binEnd - row.binStart;  // Mark as pre-binned for visualization
-            row.resolution = this.currentResolution;
+            row.preBinnedSize = row.binEnd - row.binStart;
+            row.resolution = resName;
 
             data.push(row);
         }
@@ -243,19 +304,19 @@ export class CSVResolutionManager {
     /**
      * Get the required resolution for a given visible time range
      * @param {number} visibleRange - Time range in microseconds
-     * @returns {string} Resolution level
+     * @returns {string} Resolution level name
      */
     getResolutionForRange(visibleRange) {
         const now = performance.now();
         const timeSinceLastSwitch = now - this.lastSwitchTime;
 
-        let targetResolution;
-        if (visibleRange > RESOLUTION_THRESHOLDS.SECONDS) {
-            targetResolution = RESOLUTION.SECONDS;
-        } else if (visibleRange > RESOLUTION_THRESHOLDS.MILLISECONDS) {
-            targetResolution = RESOLUTION.MILLISECONDS;
-        } else {
-            targetResolution = RESOLUTION.RAW;
+        // Find first resolution where visibleRange > threshold (config is ordered by threshold desc)
+        let targetResolution = RESOLUTION_CONFIG[RESOLUTION_CONFIG.length - 1].name;
+        for (const res of RESOLUTION_CONFIG) {
+            if (visibleRange > res.threshold) {
+                targetResolution = res.name;
+                break;
+            }
         }
 
         // Apply minimum switch interval to prevent flickering
@@ -300,6 +361,7 @@ export class CSVResolutionManager {
 
         const resInfo = this.getResolutionInfo(visibleRange);
         const requiredResolution = resInfo.resolution;
+        const resConfig = RESOLUTION_BY_NAME[requiredResolution];
 
         console.log(`[CSVResManager] Getting data for [${start}, ${end}], range=${(visibleRange/1_000_000).toFixed(2)}s, res=${requiredResolution}`);
 
@@ -308,8 +370,8 @@ export class CSVResolutionManager {
         let isLoading = false;
         let loadingPromise = null;
 
-        // Check if we need to load chunk data
-        if (requiredResolution === RESOLUTION.MILLISECONDS || requiredResolution === RESOLUTION.RAW) {
+        // Check if we need to load chunk data (not for single-file resolutions)
+        if (resConfig && !resConfig.isSingleFile) {
             const missingChunks = this._getMissingChunks(domain, requiredResolution);
 
             if (missingChunks.length > 0) {
@@ -337,30 +399,40 @@ export class CSVResolutionManager {
      */
     async _getImmediateData(domain, targetResolution) {
         const [start, end] = domain;
+        const resConfig = RESOLUTION_BY_NAME[targetResolution];
 
-        if (targetResolution === RESOLUTION.SECONDS && this.secondsData) {
-            return this.secondsData.filter(d => {
-                const t = d.binStart || d.timestamp;
-                return t >= start && t <= end;
-            });
+        // For single-file resolutions, use pre-loaded data
+        if (resConfig?.isSingleFile) {
+            const data = this.singleFileData.get(targetResolution);
+            if (data) {
+                return data.filter(d => {
+                    const t = d.binStart || d.timestamp;
+                    return t >= start && t <= end;
+                });
+            }
         }
 
-        if (targetResolution === RESOLUTION.MILLISECONDS) {
-            const cachedData = this._assembleFromCache(domain, this.millisecondsCache, this.millisecondsIndex);
-            if (cachedData.length > 0) return cachedData;
+        // For chunked resolutions, try to assemble from cache
+        if (resConfig && !resConfig.isSingleFile) {
+            const cache = this.caches.get(targetResolution);
+            const index = this.indices.get(targetResolution);
+            if (cache && index) {
+                const cachedData = this._assembleFromCache(domain, cache, index);
+                if (cachedData.length > 0) return cachedData;
+            }
         }
 
-        if (targetResolution === RESOLUTION.RAW) {
-            const cachedData = this._assembleFromCache(domain, this.rawCache, this.rawIndex);
-            if (cachedData.length > 0) return cachedData;
-        }
-
-        // Fall back to seconds data
-        if (this.secondsData) {
-            return this.secondsData.filter(d => {
-                const t = d.binStart || d.timestamp;
-                return t >= start && t <= end;
-            });
+        // Fall back to first available single-file resolution data
+        for (const res of RESOLUTION_CONFIG) {
+            if (res.isSingleFile) {
+                const data = this.singleFileData.get(res.name);
+                if (data && data.length > 0) {
+                    return data.filter(d => {
+                        const t = d.binStart || d.timestamp;
+                        return t >= start && t <= end;
+                    });
+                }
+            }
         }
 
         return [];
@@ -372,10 +444,10 @@ export class CSVResolutionManager {
      */
     _getMissingChunks(domain, resolution) {
         const [start, end] = domain;
-        const index = resolution === RESOLUTION.MILLISECONDS ? this.millisecondsIndex : this.rawIndex;
-        const cache = resolution === RESOLUTION.MILLISECONDS ? this.millisecondsCache : this.rawCache;
+        const index = this.indices.get(resolution);
+        const cache = this.caches.get(resolution);
 
-        if (!index || !index.chunks) return [];
+        if (!index || !index.chunks || !cache) return [];
 
         const missing = [];
         for (const chunk of index.chunks) {
@@ -400,11 +472,18 @@ export class CSVResolutionManager {
 
         if (this.onLoadingStart) this.onLoadingStart();
 
-        const dirName = resolution === RESOLUTION.MILLISECONDS ? 'milliseconds' : 'raw';
-        const cache = resolution === RESOLUTION.MILLISECONDS ? this.millisecondsCache : this.rawCache;
+        const resConfig = RESOLUTION_BY_NAME[resolution];
+        const index = this.indices.get(resolution);
+        const cache = this.caches.get(resolution);
+
+        if (!resConfig || !cache) {
+            console.warn(`[CSVResManager] Unknown resolution: ${resolution}`);
+            if (this.onLoadingEnd) this.onLoadingEnd();
+            return [];
+        }
 
         try {
-            const resDir = await this.resolutionsHandle.getDirectoryHandle(dirName);
+            const resDir = await this.resolutionsHandle.getDirectoryHandle(resConfig.dirName);
 
             // Load chunks in parallel
             await Promise.all(chunks.map(async (chunk) => {
@@ -414,7 +493,7 @@ export class CSVResolutionManager {
                 try {
                     const file = await resDir.getFileHandle(chunk.file);
                     const csvText = await (await file.getFile()).text();
-                    const data = this._parseCSV(csvText);
+                    const data = this._parseCSV(csvText, resConfig);
                     cache.set(chunk.file, data);
                     console.log(`[CSVResManager] Loaded ${chunk.file}: ${data.length} items`);
                 } catch (err) {
@@ -425,7 +504,6 @@ export class CSVResolutionManager {
             }));
 
             // Assemble and return data
-            const index = resolution === RESOLUTION.MILLISECONDS ? this.millisecondsIndex : this.rawIndex;
             return this._assembleFromCache(domain, cache, index);
 
         } finally {
@@ -468,28 +546,34 @@ export class CSVResolutionManager {
      * Get memory stats
      */
     getMemoryStats() {
-        return {
-            secondsCount: this.secondsData?.length || 0,
-            millisecondsCacheChunks: this.millisecondsCache.size,
-            rawCacheChunks: this.rawCache.size,
-            loadingChunks: this.loadingChunks.size
-        };
+        const stats = { loadingChunks: this.loadingChunks.size };
+
+        for (const res of RESOLUTION_CONFIG) {
+            if (res.isSingleFile) {
+                const data = this.singleFileData.get(res.name);
+                stats[`${res.name}Count`] = data?.length || 0;
+            } else {
+                const cache = this.caches.get(res.name);
+                stats[`${res.name}CacheChunks`] = cache?.size || 0;
+            }
+        }
+
+        return stats;
     }
 
     /**
      * Clear all cached data
      */
     clear() {
-        this.secondsData = null;
-        this.millisecondsCache.clear();
-        this.rawCache.clear();
+        this.singleFileData.clear();
+        for (const cache of this.caches.values()) {
+            cache.clear();
+        }
         this.loadingChunks.clear();
-        this.currentResolution = RESOLUTION.SECONDS;
+        this.currentResolution = RESOLUTION_CONFIG[0].name;
     }
 }
 
-// Export constants
-export { RESOLUTION, RESOLUTION_THRESHOLDS };
-
-// Export singleton instance
+// Export config and singleton instance
+export { RESOLUTION_CONFIG, RESOLUTION_BY_NAME };
 export const csvResolutionManager = new CSVResolutionManager();

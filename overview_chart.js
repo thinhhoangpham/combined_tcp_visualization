@@ -1425,22 +1425,28 @@ export function createOverviewFromAdaptive(adaptiveData, { timeExtent, width, ma
     const presentReasons = invalidReasons.filter(r => presentReasonsSet.has(r));
     const reasons = presentReasons.length ? presentReasons : ['unknown_invalid'];
 
-    // Compute max values for scaling
+    // Compute max values for scaling (per-band, not total sum)
     let maxTotal = 0;
     for (const bin of adaptiveData.bins) {
-        let total = 0;
-        for (const count of Object.values(bin.counts)) {
-            total += count;
+        const closeTotal = (bin.counts.graceful || 0) + (bin.counts.abortive || 0);
+        const ongoingTotal = (bin.counts.open || 0) + (bin.counts.ongoing || 0);
+        let invalidTotal = 0;
+        for (const reason of invalidReasons) {
+            invalidTotal += bin.counts[reason] || 0;
         }
-        if (total > maxTotal) maxTotal = total;
+        maxTotal = Math.max(maxTotal, closeTotal, ongoingTotal, invalidTotal);
     }
     const sharedMax = Math.max(1, maxTotal);
 
     // Build segments for rendering
     const segments = [];
     for (const bin of adaptiveData.bins) {
-        const x0 = overviewXScale(bin.start);
-        const x1 = overviewXScale(bin.end);
+        // Skip bins outside the visible time extent
+        if (bin.end < timeExtent[0] || bin.start > timeExtent[1]) continue;
+
+        // Clamp bin positions to the time extent
+        const x0 = overviewXScale(Math.max(bin.start, timeExtent[0]));
+        const x1 = overviewXScale(Math.min(bin.end, timeExtent[1]));
         const widthPx = Math.max(1, x1 - x0);
         const baseX = x0;
 

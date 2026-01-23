@@ -1,8 +1,8 @@
 {
-  "version": "3.0",
+  "version": "3.3",
   "format": "multires_packets",
-  "created": "2026-01-14T23:48:41.780879",
-  "source_file": ".\\attack_packets_first5days.csv",
+  "created": "2026-01-22T21:48:29.660378",
+  "source_file": "packets_data/attack_packets_first5days.csv",
   "total_packets": 24469142,
   "unique_ips": 294,
   "time_range": {
@@ -11,17 +11,41 @@
     "duration": 399449329561
   },
   "resolutions": {
+    "hours": {
+      "resolution_microseconds": 3600000000,
+      "total_bins": 33761,
+      "index": "resolutions/hours/index.json",
+      "data": "resolutions/hours/data.csv"
+    },
+    "minutes": {
+      "resolution_microseconds": 60000000,
+      "total_bins": 80762,
+      "index": "resolutions/minutes/index.json",
+      "data": "resolutions/minutes/data.csv"
+    },
     "seconds": {
       "resolution_microseconds": 1000000,
       "total_bins": 916036,
       "index": "resolutions/seconds/index.json",
       "data": "resolutions/seconds/data.csv"
     },
-    "milliseconds": {
+    "100ms": {
+      "resolution_microseconds": 100000,
+      "total_bins": 2432821,
+      "total_chunks": 17,
+      "index": "resolutions/100ms/index.json"
+    },
+    "10ms": {
+      "resolution_microseconds": 10000,
+      "total_bins": 4750003,
+      "total_chunks": 33,
+      "index": "resolutions/10ms/index.json"
+    },
+    "1ms": {
       "resolution_microseconds": 1000,
       "total_bins": 23504598,
       "total_chunks": 49,
-      "index": "resolutions/milliseconds/index.json"
+      "index": "resolutions/1ms/index.json"
     },
     "raw": {
       "resolution_microseconds": 1,

@@ -83,6 +83,7 @@ try {
 // Multi-resolution state
 let useMultiRes = false;  // Whether to use multi-resolution data
 let currentResolutionLevel = null;  // Current resolution: 'seconds', 'milliseconds', 'raw', or null
+let isInitialResolutionLoad = true;  // Only sync with overview on initial load, then allow free zoom
 
 // --- Web Worker for packet filtering ---
 let workerManager = null;
@@ -1704,16 +1705,44 @@ async function updateIPFilter() {
             }
             dataVersion++;
         } else {
-            if (filterCache.has(cacheKey)) {
-                filteredData = filterCache.get(cacheKey);
-                if (DEBUG) console.log('Using cached filteredData for key', cacheKey, 'len', filteredData.length);
+            // Determine which resolution data to use
+            // When adaptive overview is available, use minutes data to match overview's 1min resolution
+            let sourceData = fullData;
+            let usedResolution = 'hours';
+
+            if (adaptiveOverviewLoader && adaptiveOverviewLoader.index && fetchResManager.singleFileData) {
+                // Get the overview's current resolution directly, or default to minutes
+                const overviewRes = adaptiveOverviewLoader.currentResolution || '1min';
+                const mappedRes = OVERVIEW_TO_PACKET_RESOLUTION[overviewRes] || 'minutes';
+                const resData = fetchResManager.singleFileData.get(mappedRes);
+
+                if (resData && resData.length > 0) {
+                    sourceData = resData;
+                    usedResolution = mappedRes;
+                    console.log(`[updateIPFilter] Using ${mappedRes} resolution data (${resData.length} bins) to match overview ${overviewRes}`);
+                } else {
+                    // Fallback: try minutes directly
+                    const minutesData = fetchResManager.singleFileData.get('minutes');
+                    if (minutesData && minutesData.length > 0) {
+                        sourceData = minutesData;
+                        usedResolution = 'minutes';
+                        console.log(`[updateIPFilter] Using minutes resolution data (${minutesData.length} bins) as fallback`);
+                    }
+                }
+            }
+
+            // Use resolution-aware cache key
+            const resCacheKey = `${cacheKey}|${usedResolution}`;
+            if (filterCache.has(resCacheKey)) {
+                filteredData = filterCache.get(resCacheKey);
+                if (DEBUG) console.log('Using cached filteredData for key', resCacheKey, 'len', filteredData.length);
             } else {
-                const result = fullData.filter(packet =>
+                const result = sourceData.filter(packet =>
                     selectedIPSet.has(packet.src_ip) && selectedIPSet.has(packet.dst_ip)
                 );
-                filterCache.set(cacheKey, result);
+                filterCache.set(resCacheKey, result);
                 filteredData = result;
-                if (DEBUG) console.log('Cached filteredData for key', cacheKey, 'len', filteredData.length);
+                console.log(`[updateIPFilter] Filtered ${usedResolution} data: ${result.length} bins for ${selectedIPs.length} IPs`);
             }
             dataVersion++;
         }
@@ -2537,36 +2566,22 @@ function updateClosingStats(closings) {
 }
 
 /**
- * Update the resolution indicator UI to show current data resolution level
- * @param {string|null} resolution - Current resolution: 'seconds', 'milliseconds', 'raw', or null
- * @param {number} dataPoints - Number of data points at this resolution
+ * Update the zoom level indicator UI
  */
-function updateResolutionIndicator(resolution, dataPoints) {
-    const group = document.getElementById('resolutionIndicatorGroup');
-    const levelEl = document.getElementById('resolutionLevel');
-    const detailsEl = document.getElementById('resolutionDetails');
+function updateZoomIndicator(visibleRangeUs, resolution = null, dataPoints = 0) {
+    const timeRangeEl = document.getElementById('zoomTimeRange');
+    const resEl = document.getElementById('zoomResolution');
+    if (!timeRangeEl) return;
 
-    if (!group || !levelEl || !detailsEl) return;
+    timeRangeEl.textContent = formatDuration(visibleRangeUs);
 
-    if (!resolution || !useMultiRes) {
-        group.style.display = 'none';
-        return;
+    if (resEl && resolution) {
+        const resConfig = FETCH_RES_BY_NAME[resolution];
+        const label = resConfig?.uiInfo?.label || resolution;
+        resEl.textContent = `${label} · ${dataPoints.toLocaleString()} points`;
+    } else if (resEl) {
+        resEl.textContent = dataPoints > 0 ? `${dataPoints.toLocaleString()} points` : '';
     }
-
-    group.style.display = 'block';
-
-    // Format resolution name with icon
-    const resolutionInfo = {
-        'seconds': { name: 'Seconds', icon: '📊', color: '#28a745' },
-        'milliseconds': { name: 'Milliseconds', icon: '⏱', color: '#007bff' },
-        'raw': { name: 'Raw Packets', icon: '📦', color: '#6c757d' },
-        'fallback': { name: 'Fallback', icon: '⚠️', color: '#ffc107' }
-    };
-
-    const info = resolutionInfo[resolution] || { name: resolution, icon: '📈', color: '#6c757d' };
-    levelEl.textContent = `${info.icon} ${info.name}`;
-    levelEl.style.color = info.color;
-    detailsEl.textContent = `(${dataPoints.toLocaleString()} data points)`;
 }
 
 // Wrapper for exportFlowToCSV that provides the fullData and helpers
@@ -3517,6 +3532,9 @@ function visualizeTimeArcs(packets) {
     d3.select("#chart").html("");
     document.getElementById('loadingMessage').style.display = 'none';
 
+    // Reset initial load flag so we sync with overview on first render
+    isInitialResolutionLoad = true;
+
     if (!packets || packets.length === 0) {
         document.getElementById('loadingMessage').textContent = 'No data to visualize.';
         document.getElementById('loadingMessage').style.display = 'block';
@@ -3606,6 +3624,15 @@ function visualizeTimeArcs(packets) {
 
     xScale = d3.scaleLinear().domain(timeExtent).range([0, width]);
     yScale = d3.scaleLinear().domain([minY, maxY]).range([minY, maxY]);
+
+    // Update zoom indicator now that xScale has valid domain
+    const visibleRangeUs = timeExtent[1] - timeExtent[0];
+    if (visibleRangeUs > 0) {
+        const resolution = getResolutionForVisibleRange(visibleRangeUs);
+        const dataCount = fetchResManager.singleFileData.get(resolution)?.length || fullData.length;
+        updateZoomIndicator(visibleRangeUs, resolution, dataCount);
+        console.log(`[visualizeData] Updated zoom indicator: range=${(visibleRangeUs/60_000_000).toFixed(1)} min, resolution=${resolution}`);
+    }
 
     const svgContainer = d3.select("#chart").append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -3786,6 +3813,17 @@ function visualizeTimeArcs(packets) {
     updateBrushFromZoom();
     try { updateZoomDurationLabel(); } catch(_) {}
 
+        // Update zoom indicator immediately when domain changes (before any early returns)
+        try {
+            const domain = xScale.domain();
+            const visibleRangeUsImmediate = domain[1] - domain[0];
+            // Only update if we have a valid visible range (skip if domain not set or zero range)
+            if (visibleRangeUsImmediate > 0) {
+                const resolutionImmediate = getResolutionForVisibleRange(visibleRangeUsImmediate);
+                updateZoomIndicator(visibleRangeUsImmediate, resolutionImmediate, 0);
+            }
+        } catch (_) {}
+
         if ((isHardResetInProgress || (atFullDomainImmediate && !flowsFilteringActiveImmediate)) &&
             !flowsFilteringActiveImmediate && fullDomainLayer && fullDomainBinsCache.data.length > 0) {
             if (fullDomainLayer) fullDomainLayer.style("display", null);
@@ -3815,6 +3853,10 @@ function visualizeTimeArcs(packets) {
                 fullDomainLayer.style("display", null);
                 if (dynamicLayer) dynamicLayer.style("display", "none");
                 try { updateZoomDurationLabel(); } catch(_) {}
+                // Update zoom indicator even for full domain cached view
+                const visibleRangeUsFull = xScale.domain()[1] - xScale.domain()[0];
+                const resolutionFull = getResolutionForVisibleRange(visibleRangeUsFull);
+                updateZoomIndicator(visibleRangeUsFull, resolutionFull, fullDomainBinsCache.data.length);
                 return;
             } else {
                 if (fullDomainLayer) fullDomainLayer.style("display", "none");
@@ -3828,7 +3870,8 @@ function visualizeTimeArcs(packets) {
             let usedMultiRes = false;
 
             // Try multi-resolution data first (if available and enabled)
-            if (useMultiRes && getMultiResData && isMultiResAvailable && isMultiResAvailable() && !flowsFilteringActive) {
+            // Use multi-res even when flows filtering is active - we'll filter by flows after
+            if (useMultiRes && getMultiResData && isMultiResAvailable && isMultiResAvailable()) {
                 try {
                     const multiResResult = await getMultiResData(xScale, zoomLevel);
                     if (multiResResult.data && multiResResult.data.length > 0) {
@@ -3837,7 +3880,7 @@ function visualizeTimeArcs(packets) {
 
                         // Data from multi-resolution manager is already at the correct resolution
                         // Don't re-bin - just add y positions for rendering
-                        binnedPackets = multiResResult.data.map(d => ({
+                        let processedData = multiResResult.data.map(d => ({
                             ...d,
                             yPos: findIPPosition(d.src_ip, d.src_ip, d.dst_ip, pairs, ipPositions),
                             binCenter: d.bin_start ? (d.bin_start + (d.bin_end - d.bin_start) / 2) : d.timestamp,
@@ -3847,8 +3890,20 @@ function visualizeTimeArcs(packets) {
                             originalPackets: d.originalPackets || [d]
                         }));
 
-                        console.log(`Using ${multiResResult.resolution} resolution: ${binnedPackets.length} data points`);
-                        updateResolutionIndicator(multiResResult.resolution, binnedPackets.length);
+                        // Apply flow filtering if active
+                        if (flowsFilteringActive) {
+                            const selectedKeys = buildSelectedFlowKeySet();
+                            processedData = processedData.filter(packet => {
+                                if (!packet || !packet.src_ip || !packet.dst_ip) return false;
+                                const key = makeConnectionKey(packet.src_ip, packet.src_port || 0, packet.dst_ip, packet.dst_port || 0);
+                                return selectedKeys.has(key);
+                            });
+                        }
+
+                        binnedPackets = processedData;
+                        console.log(`Using ${multiResResult.resolution} resolution: ${binnedPackets.length} data points (flows filtering: ${flowsFilteringActive})`);
+                        const visibleRangeUs = xScale.domain()[1] - xScale.domain()[0];
+                        updateZoomIndicator(visibleRangeUs, multiResResult.resolution, binnedPackets.length);
                     }
                 } catch (err) {
                     console.warn('Multi-res data loading failed, falling back:', err);
@@ -3859,7 +3914,9 @@ function visualizeTimeArcs(packets) {
             // Fall back to original binning logic
             if (!usedMultiRes) {
                 currentResolutionLevel = null;
-                updateResolutionIndicator(null, 0);  // Hide resolution indicator when not using multi-res
+                const visibleRangeUs = xScale.domain()[1] - xScale.domain()[0];
+                // Still show zoom indicator with visible range, just no specific resolution
+                updateZoomIndicator(visibleRangeUs);
                 if (atFullDomain && !flowsFilteringActive && fullDomainBinsCache.version === dataVersion && fullDomainBinsCache.data.length > 0) {
                     binnedPackets = fullDomainBinsCache.data;
                 } else {
@@ -3874,6 +3931,10 @@ function visualizeTimeArcs(packets) {
                     }
                     if (!visiblePackets || visiblePackets.length === 0) {
                         if (dynamicLayer) dynamicLayer.selectAll('.direction-dot').remove();
+                        // Still update zoom indicator even with no data
+                        const visibleRangeUsEmpty = xScale.domain()[1] - xScale.domain()[0];
+                        const resolutionEmpty = getResolutionForVisibleRange(visibleRangeUsEmpty);
+                        updateZoomIndicator(visibleRangeUsEmpty, resolutionEmpty, 0);
                         return;
                     }
 
@@ -3906,6 +3967,11 @@ function visualizeTimeArcs(packets) {
                         fullDomainBinsCache = { version: dataVersion, data: binnedPackets, binSize: null, sorted: false };
                     }
                 }
+                // Update indicator with actual data point count for fallback path
+                const visibleRangeUs2 = xScale.domain()[1] - xScale.domain()[0];
+                // Determine resolution based on visible range (same logic as multi-res manager)
+                const fallbackResolution = dataIsPreBinned ? getResolutionForVisibleRange(visibleRangeUs2) : 'binned';
+                updateZoomIndicator(visibleRangeUs2, fallbackResolution, binnedPackets.length);
             }
 
             if (!(atFullDomain && !flowsFilteringActive && fullDomainBinsCache.sorted)) {
@@ -4429,7 +4495,13 @@ Check browser console (F12) for detailed error logs.`);
         document.getElementById('loadingMessage').style.display = 'block';
         
         console.log(`Folder data ready with ${packets.length} ${isPreBinned ? 'pre-binned data points' : 'packets'} and ${uniqueIPs.length} unique IPs`);
-        
+
+        // Show initial zoom indicator with full data range
+        if (timeExtent && timeExtent.length === 2) {
+            const fullRangeUs = timeExtent[1] - timeExtent[0];
+            updateZoomIndicator(fullRangeUs, isPreBinned ? 'seconds' : null, packets.length);
+        }
+
         // Hide progress
         try { sbHideCsvProgress(); } catch (_) {}
         
@@ -4615,25 +4687,30 @@ async function handleFlowDataLoaded(event) {
             // Try multi-resolution adaptive loader first, fall back to single-resolution flow_bins.json
             const basePath = detail.basePath || 'packets_data/attack_flows_day1to5';
             let flowBins = null;
-            let hasAdaptiveOverview = false;
+            let hasAdaptiveOverview = adaptiveOverviewLoader && adaptiveOverviewLoader.index;
             let adaptiveBasePath = null; // Separate path for adaptive overview (may differ from chunk path)
 
-            // Try to initialize adaptive multi-resolution loader
-            try {
-                const indexPath = `${basePath}/indices/flow_bins_index.json`;
-                console.log(`[FlowData] Checking for multi-resolution index at ${indexPath}...`);
-                const indexResponse = await fetch(indexPath);
-                if (indexResponse.ok) {
-                    // Multi-resolution data available - initialize adaptive loader
-                    adaptiveOverviewLoader = new AdaptiveOverviewLoader(basePath);
-                    await adaptiveOverviewLoader.loadIndex();
-                    hasAdaptiveOverview = true;
-                    adaptiveBasePath = basePath;
-                    console.log(`[FlowData] ✓ Adaptive overview loader initialized from ${basePath} with resolutions:`,
-                        Object.keys(adaptiveOverviewLoader.index.resolutions));
+            // Try to initialize adaptive multi-resolution loader (if not already initialized)
+            if (!hasAdaptiveOverview) {
+                try {
+                    const indexPath = `${basePath}/indices/flow_bins_index.json`;
+                    console.log(`[FlowData] Checking for multi-resolution index at ${indexPath}...`);
+                    const indexResponse = await fetch(indexPath);
+                    if (indexResponse.ok) {
+                        // Multi-resolution data available - initialize adaptive loader
+                        adaptiveOverviewLoader = new AdaptiveOverviewLoader(basePath);
+                        await adaptiveOverviewLoader.loadIndex();
+                        hasAdaptiveOverview = true;
+                        adaptiveBasePath = basePath;
+                        console.log(`[FlowData] ✓ Adaptive overview loader initialized from ${basePath} with resolutions:`,
+                            Object.keys(adaptiveOverviewLoader.index.resolutions));
+                    }
+                } catch (err) {
+                    console.log(`[FlowData] No multi-resolution index at ${basePath}`);
                 }
-            } catch (err) {
-                console.log(`[FlowData] No multi-resolution index at ${basePath}`);
+            } else {
+                console.log(`[FlowData] Adaptive overview loader already initialized`);
+                adaptiveBasePath = basePath;
             }
 
             if (!hasAdaptiveOverview) {
@@ -4854,29 +4931,132 @@ const DEFAULT_FLOW_DATA_PATH = 'packets_data/attack_flows_day1to5';
 // Handles dynamic loading of millisecond and raw resolution data via fetch()
 // ============================================================================
 
-// Resolution thresholds (in microseconds of visible range)
-const FETCH_RES_THRESHOLDS = {
-    SECONDS: 60 * 1_000_000,      // > 60s visible: use seconds
-    MILLISECONDS: 1 * 1_000_000,  // 1s - 60s visible: use milliseconds
-    RAW: 0                         // < 1s visible: use raw packets
-};
+/**
+ * Single configuration for all resolution levels (fetch-based manager).
+ * Order matters: first match wins (check from top to bottom).
+ * To add a new resolution, just add an entry here.
+ *
+ * Resolution thresholds aligned with overview chart's adaptive loading (flow_bins_index.json):
+ * - Overview uses 1min when range <= 120 minutes
+ * - Overview uses hour when range > 7200 minutes (5 days)
+ *
+ * Packet view thresholds:
+ * - hours: used when viewing > 120 minutes (matches overview switching to coarser)
+ * - minutes: used when viewing > 10 minutes (matches overview's 1min range)
+ * - seconds: used when viewing > 1 minute
+ * - 100ms: used when viewing > 10 seconds
+ * - 10ms: used when viewing > 1 second
+ * - 1ms: used when viewing > 100ms
+ * - raw: used when viewing < 100ms (individual packets)
+ */
+const FETCH_RES_CONFIG = [
+    {
+        name: 'hours',
+        dirName: 'hours',
+        threshold: 120 * 60 * 1_000_000, // > 120 minutes visible: use hours (matches overview 1min->hour transition)
+        binSize: 3_600_000_000,          // 1 hour in microseconds
+        preBinned: true,
+        isSingleFile: true,
+        cacheSize: 0,
+        uiInfo: { label: 'Hours', icon: '🕐', color: '#20c997' }
+    },
+    {
+        name: 'minutes',
+        dirName: 'minutes',
+        threshold: 10 * 60 * 1_000_000,  // > 10 minutes visible: use minutes (matches overview 1s->1min transition)
+        binSize: 60_000_000,             // 1 minute in microseconds
+        preBinned: true,
+        isSingleFile: true,
+        cacheSize: 0,
+        uiInfo: { label: 'Minutes', icon: '🕑', color: '#17a2b8' }
+    },
+    {
+        name: 'seconds',
+        dirName: 'seconds',
+        threshold: 60 * 1_000_000,       // > 60s visible: use seconds
+        binSize: 1_000_000,
+        preBinned: true,
+        isSingleFile: true,
+        cacheSize: 0,
+        uiInfo: { label: 'Seconds', icon: '📊', color: '#28a745' }
+    },
+    {
+        name: '100ms',
+        dirName: '100ms',
+        threshold: 10 * 1_000_000,       // > 10s visible: use 100ms
+        binSize: 100_000,
+        preBinned: true,
+        isSingleFile: false,
+        cacheSize: 30,
+        uiInfo: { label: '100ms', icon: '⏱', color: '#17a2b8' }
+    },
+    {
+        name: '10ms',
+        dirName: '10ms',
+        threshold: 1 * 1_000_000,        // > 1s visible: use 10ms
+        binSize: 10_000,
+        preBinned: true,
+        isSingleFile: false,
+        cacheSize: 40,
+        uiInfo: { label: '10ms', icon: '⏱', color: '#007bff' }
+    },
+    {
+        name: '1ms',
+        dirName: '1ms',
+        threshold: 100_000,              // > 100ms visible: use 1ms
+        binSize: 1_000,
+        preBinned: true,
+        isSingleFile: false,
+        cacheSize: 50,
+        uiInfo: { label: '1ms', icon: '⏱', color: '#6610f2' }
+    },
+    {
+        name: 'raw',
+        dirName: 'raw',
+        threshold: 0,               // < 100ms visible: use raw
+        binSize: 1,
+        preBinned: false,
+        isSingleFile: false,
+        cacheSize: 50,
+        uiInfo: { label: 'Raw Packets', icon: '📦', color: '#6c757d' }
+    },
+    // Fallback entry for client-side binning (not a real resolution level)
+    {
+        name: 'binned',
+        dirName: null,
+        threshold: -1,
+        binSize: 0,
+        preBinned: false,
+        isSingleFile: false,
+        cacheSize: 0,
+        uiInfo: { label: 'Client Binned', icon: '🔄', color: '#fd7e14' }
+    }
+];
 
-// Fetch-based resolution manager state
+// Build lookup map for quick access by name
+const FETCH_RES_BY_NAME = Object.fromEntries(
+    FETCH_RES_CONFIG.map(r => [r.name, r])
+);
+
+// Fetch-based resolution manager state (dynamic, config-driven)
 const fetchResManager = {
     basePath: null,
-    secondsData: null,
-    secondsIndex: null,
-    millisecondsIndex: null,
-    rawIndex: null,
-    millisecondsCache: new Map(),  // LRU cache for ms chunks
-    rawCache: new Map(),           // LRU cache for raw chunks
-    loadingChunks: new Set(),      // Currently loading chunks
-    cacheMaxSize: 30,              // Max chunks to cache per resolution
+    indices: new Map(),            // resolution name -> index data
+    caches: new Map(),             // resolution name -> Map (chunk cache)
+    singleFileData: new Map(),     // resolution name -> data array
+    loadingChunks: new Set(),
     initialized: false,
     timeExtent: null,
-    selectedIPs: [],               // Currently selected IPs for filtering
-    selectedIPSet: new Set()       // Set version for faster lookups
+    selectedIPs: [],
+    selectedIPSet: new Set()
 };
+
+// Initialize caches based on config
+for (const res of FETCH_RES_CONFIG) {
+    if (!res.isSingleFile && res.cacheSize > 0) {
+        fetchResManager.caches.set(res.name, new Map());
+    }
+}
 
 /**
  * Set the selected IPs for filtering multi-res data
@@ -4895,26 +5075,20 @@ async function initFetchResolutionManager(basePath) {
     console.log('[FetchResManager] Initializing...');
     fetchResManager.basePath = basePath;
 
-    try {
-        // Load milliseconds index
-        const msIndexResp = await fetch(`${basePath}/resolutions/milliseconds/index.json`);
-        if (msIndexResp.ok) {
-            fetchResManager.millisecondsIndex = await msIndexResp.json();
-            console.log(`[FetchResManager] Loaded milliseconds index: ${fetchResManager.millisecondsIndex.chunks?.length} chunks`);
-        }
-    } catch (err) {
-        console.warn('[FetchResManager] Failed to load milliseconds index:', err);
-    }
+    // Load indices for all resolutions based on config
+    for (const res of FETCH_RES_CONFIG) {
+        if (res.isSingleFile || !res.dirName) continue;  // Skip single-file and fallback entries
 
-    try {
-        // Load raw index
-        const rawIndexResp = await fetch(`${basePath}/resolutions/raw/index.json`);
-        if (rawIndexResp.ok) {
-            fetchResManager.rawIndex = await rawIndexResp.json();
-            console.log(`[FetchResManager] Loaded raw index: ${fetchResManager.rawIndex.chunks?.length} chunks`);
+        try {
+            const indexResp = await fetch(`${basePath}/resolutions/${res.dirName}/index.json`);
+            if (indexResp.ok) {
+                const index = await indexResp.json();
+                fetchResManager.indices.set(res.name, index);
+                console.log(`[FetchResManager] Loaded ${res.name} index: ${index.chunks?.length || 0} chunks`);
+            }
+        } catch (err) {
+            console.warn(`[FetchResManager] Failed to load ${res.name} index:`, err);
         }
-    } catch (err) {
-        console.warn('[FetchResManager] Failed to load raw index:', err);
     }
 
     fetchResManager.initialized = true;
@@ -4929,16 +5103,53 @@ async function initFetchResolutionManager(basePath) {
 }
 
 /**
- * Determine which resolution to use based on visible time range
+ * Map overview chart resolution to packets view resolution
+ * Overview uses: '1s', '1min', '10min', 'hour'
+ * Packets use: 'seconds', 'minutes', 'hours', etc.
+ */
+const OVERVIEW_TO_PACKET_RESOLUTION = {
+    '1s': 'seconds',
+    '1min': 'minutes',
+    '10min': 'minutes',  // No 10min in packets, use minutes
+    'hour': 'hours'
+};
+
+/**
+ * Determine which resolution to use based on visible range
+ * On initial load: sync with overview chart resolution
+ * After initial load: use threshold-based logic for free zoom to finer levels
  */
 function getResolutionForVisibleRange(visibleRangeUs) {
-    if (visibleRangeUs > FETCH_RES_THRESHOLDS.SECONDS) {
-        return 'seconds';
-    } else if (visibleRangeUs > FETCH_RES_THRESHOLDS.MILLISECONDS) {
-        return 'milliseconds';
-    } else {
-        return 'raw';
+    // Sanity check: if visible range is invalid or zero, default to hours
+    if (!visibleRangeUs || visibleRangeUs <= 0) {
+        console.log(`[Resolution] Invalid visible range (${visibleRangeUs}), defaulting to hours`);
+        return 'hours';
     }
+
+    // On initial load only: sync with overview chart resolution
+    if (isInitialResolutionLoad && adaptiveOverviewLoader && adaptiveOverviewLoader.index) {
+        const timeRangeMinutes = visibleRangeUs / 60_000_000;
+        const overviewRes = adaptiveOverviewLoader.selectResolution(timeRangeMinutes);
+        const mappedRes = OVERVIEW_TO_PACKET_RESOLUTION[overviewRes];
+        if (mappedRes && FETCH_RES_BY_NAME[mappedRes]) {
+            console.log(`[Resolution] Initial load sync: ${timeRangeMinutes.toFixed(1)} min → overview=${overviewRes} → packets=${mappedRes}`);
+            // Mark initial load as done - subsequent zooms use threshold logic
+            isInitialResolutionLoad = false;
+            return mappedRes;
+        }
+    }
+
+    // After initial load (or if no overview): use threshold-based logic for all zoom levels
+    for (const res of FETCH_RES_CONFIG) {
+        // Skip 'binned' - it's only for client-side binning, not a real resolution
+        if (res.name === 'binned') continue;
+        if (visibleRangeUs > res.threshold) {
+            console.log(`[Resolution] Threshold: ${(visibleRangeUs/1_000_000).toFixed(2)}s → ${res.name}`);
+            return res.name;
+        }
+    }
+    // Default to finest available resolution if nothing matched
+    return '1ms';
 }
 
 /**
@@ -4949,7 +5160,7 @@ function getResolutionForVisibleRange(visibleRangeUs) {
  */
 async function fetchGetMultiResData(xScale, zoomLevel) {
     if (!fetchResManager.initialized) {
-        return { data: [], resolution: 'seconds', preBinned: true };
+        return { data: [], resolution: 'hours', preBinned: true };
     }
 
     const domain = xScale.domain();
@@ -4957,86 +5168,59 @@ async function fetchGetMultiResData(xScale, zoomLevel) {
     const visibleRange = end - start;
 
     const resolution = getResolutionForVisibleRange(visibleRange);
+    const resConfig = FETCH_RES_BY_NAME[resolution];
     console.log(`[FetchResManager] Visible range: ${(visibleRange/1_000_000).toFixed(2)}s, Resolution: ${resolution}`);
 
     // Helper: filter data by selected IPs (only include rows where both src and dst are selected)
     const filterBySelectedIPs = (data) => {
         const ipSet = fetchResManager.selectedIPSet;
-        // If no IPs selected or very few, don't filter (user will see all)
-        // If < 2 IPs are selected, we need both endpoints to match for the connection to be visible
         if (ipSet.size < 2) {
             return [];  // Need at least 2 IPs to show any connection
         }
         return data.filter(d => ipSet.has(d.src_ip) && ipSet.has(d.dst_ip));
     };
 
-    // For seconds resolution, use the pre-loaded data
-    if (resolution === 'seconds') {
-        if (fetchResManager.secondsData) {
-            let filtered = fetchResManager.secondsData.filter(d => {
+    // For single-file resolutions (hours, minutes, seconds), use pre-loaded data
+    if (resConfig?.isSingleFile) {
+        const preloadedData = fetchResManager.singleFileData.get(resolution);
+        if (preloadedData) {
+            let filtered = preloadedData.filter(d => {
                 const t = d.binStart || d.timestamp;
                 return t >= start && t <= end;
             });
-            // Apply IP filtering
             filtered = filterBySelectedIPs(filtered);
-
-            // Debug: log flag type distribution
-            const flagDist = {};
-            filtered.forEach(d => {
-                const ft = d.flagType || d.flag_type || 'UNKNOWN';
-                flagDist[ft] = (flagDist[ft] || 0) + 1;
-            });
-            console.log(`[FetchResManager] Seconds data flag distribution:`, flagDist);
-
-            // Debug: log by src_ip
-            const srcDist = {};
-            filtered.forEach(d => {
-                const key = `${d.src_ip} -> ${d.flagType || d.flag_type}`;
-                srcDist[key] = (srcDist[key] || 0) + 1;
-            });
-            console.log(`[FetchResManager] Seconds data by src_ip:`, srcDist);
-
-            return { data: filtered, resolution: 'seconds', preBinned: true };
+            return { data: filtered, resolution, preBinned: resConfig.preBinned };
         }
-        // Fall back to fullData if seconds not in manager
+        // Fall back to fullData
         let filtered = fullData.filter(d => {
             const t = d.binStart || d.timestamp;
             return t >= start && t <= end;
         });
-        // Apply IP filtering
         filtered = filterBySelectedIPs(filtered);
-        return { data: filtered, resolution: 'seconds', preBinned: true };
+        return { data: filtered, resolution, preBinned: true };
     }
 
-    // For milliseconds resolution
-    if (resolution === 'milliseconds') {
-        let data = await fetchChunksForRange(start, end, 'milliseconds');
-        // Apply IP filtering
-        data = filterBySelectedIPs(data);
-        return { data, resolution: 'milliseconds', preBinned: true };
-    }
+    // For chunked resolutions, fetch from chunks
+    let data = await fetchChunksForRange(start, end, resolution);
+    data = filterBySelectedIPs(data);
+    return { data, resolution, preBinned: resConfig?.preBinned !== false };
+}
 
-    // For raw resolution
-    if (resolution === 'raw') {
-        let data = await fetchChunksForRange(start, end, 'raw');
-        // Apply IP filtering
-        data = filterBySelectedIPs(data);
-        return { data, resolution: 'raw', preBinned: false };
-    }
-
-    return { data: [], resolution, preBinned: true };
+/**
+ * Get index and cache for a given resolution
+ */
+function getIndexAndCacheForResolution(resolution) {
+    return {
+        index: fetchResManager.indices.get(resolution),
+        cache: fetchResManager.caches.get(resolution)
+    };
 }
 
 /**
  * Fetch and assemble data from chunks for a time range
  */
 async function fetchChunksForRange(start, end, resolution) {
-    const index = resolution === 'milliseconds'
-        ? fetchResManager.millisecondsIndex
-        : fetchResManager.rawIndex;
-    const cache = resolution === 'milliseconds'
-        ? fetchResManager.millisecondsCache
-        : fetchResManager.rawCache;
+    const { index, cache } = getIndexAndCacheForResolution(resolution);
 
     if (!index || !index.chunks) {
         console.warn(`[FetchResManager] No ${resolution} index available`);
@@ -5089,14 +5273,18 @@ async function fetchChunksForRange(start, end, resolution) {
  * Load a single chunk from the server
  */
 async function loadChunk(chunk, resolution) {
-    const cache = resolution === 'milliseconds'
-        ? fetchResManager.millisecondsCache
-        : fetchResManager.rawCache;
+    const { cache } = getIndexAndCacheForResolution(resolution);
+    const resConfig = FETCH_RES_BY_NAME[resolution];
+
+    if (!cache || !resConfig) {
+        console.warn(`[FetchResManager] Unknown resolution: ${resolution}`);
+        return;
+    }
 
     fetchResManager.loadingChunks.add(chunk.file);
 
     try {
-        const url = `${fetchResManager.basePath}/resolutions/${resolution}/${chunk.file}`;
+        const url = `${fetchResManager.basePath}/resolutions/${resConfig.dirName}/${chunk.file}`;
         console.log(`[FetchResManager] Loading: ${url}`);
 
         const response = await fetch(url);
@@ -5105,12 +5293,14 @@ async function loadChunk(chunk, resolution) {
         }
 
         const csvText = await response.text();
-        const data = resolution === 'milliseconds'
-            ? parseMillisecondsCSV(csvText)
-            : parseRawCSV(csvText);
+        // Use config to determine parsing: preBinned uses binned parser, otherwise raw
+        const data = resConfig.preBinned
+            ? parseBinnedCSV(csvText, resConfig)
+            : parseRawCSV(csvText, resConfig);
 
-        // Add to cache (with LRU eviction)
-        if (cache.size >= fetchResManager.cacheMaxSize) {
+        // Add to cache (with LRU eviction based on config)
+        const maxSize = resConfig.cacheSize || 30;
+        if (cache.size >= maxSize) {
             const oldest = cache.keys().next().value;
             cache.delete(oldest);
         }
@@ -5126,13 +5316,17 @@ async function loadChunk(chunk, resolution) {
 }
 
 /**
- * Parse milliseconds-level CSV (pre-binned)
+ * Parse binned CSV (pre-binned data for any resolution)
  * Columns: timestamp,bin_start,bin_end,src_ip,dst_ip,count,total_bytes,flag_type
+ * @param {string} csvText - CSV text to parse
+ * @param {Object} resConfig - Resolution config object from FETCH_RES_CONFIG
  */
-function parseMillisecondsCSV(csvText) {
+function parseBinnedCSV(csvText, resConfig) {
     const lines = csvText.split('\n').filter(line => line.trim().length > 0);
     if (lines.length < 2) return [];
 
+    const binSize = resConfig?.binSize || 1_000;
+    const resName = resConfig?.name || 'unknown';
     const headers = lines[0].split(',').map(h => h.trim());
     const data = [];
 
@@ -5154,13 +5348,13 @@ function parseMillisecondsCSV(csvText) {
         // Add visualization-compatible metadata
         row.binned = true;
         row.binStart = row.bin_start || row.timestamp;
-        row.binEnd = row.bin_end || (row.timestamp + 1000);  // 1ms bins
+        row.binEnd = row.bin_end || (row.timestamp + binSize);
         row.binCenter = Math.floor((row.binStart + row.binEnd) / 2);
         row.flagType = row.flag_type || 'OTHER';
         row.flags = flagTypeToFlags(row.flag_type);
         row.length = row.total_bytes || 0;
         row.preBinnedSize = row.binEnd - row.binStart;
-        row.resolution = 'milliseconds';
+        row.resolution = resName;
 
         data.push(row);
     }
@@ -5172,10 +5366,11 @@ function parseMillisecondsCSV(csvText) {
  * Parse raw CSV (individual packets)
  * Columns: timestamp,src_ip,dst_ip,src_port,dst_port,flags,flag_type,length
  */
-function parseRawCSV(csvText) {
+function parseRawCSV(csvText, resConfig = null) {
     const lines = csvText.split('\n').filter(line => line.trim().length > 0);
     if (lines.length < 2) return [];
 
+    const resName = resConfig?.name || 'raw';
     const headers = lines[0].split(',').map(h => h.trim());
     const data = [];
 
@@ -5197,7 +5392,7 @@ function parseRawCSV(csvText) {
         // Raw packets are not pre-binned
         row.binned = false;
         row.flagType = row.flag_type || 'OTHER';
-        row.resolution = 'raw';
+        row.resolution = resName;
 
         data.push(row);
     }
@@ -5231,32 +5426,76 @@ async function loadFromPath(basePath = DEFAULT_DATA_PATH) {
             return await loadFlowsFromPath(basePath, manifest);
         }
 
-        try { sbUpdateCsvProgress(0.1, 'Loading seconds index...'); } catch (_) {}
+        try { sbUpdateCsvProgress(0.1, 'Loading hours index...'); } catch (_) {}
 
-        // Load seconds resolution index
-        const secondsIndexResponse = await fetch(`${basePath}/resolutions/seconds/index.json`);
-        if (!secondsIndexResponse.ok) {
-            throw new Error(`Failed to load seconds index: ${secondsIndexResponse.status}`);
+        // Load hours resolution (initial/default zoomed-out view)
+        const hoursIndexResponse = await fetch(`${basePath}/resolutions/hours/index.json`);
+        if (!hoursIndexResponse.ok) {
+            throw new Error(`Failed to load hours index: ${hoursIndexResponse.status}`);
         }
-        const secondsIndex = await secondsIndexResponse.json();
-        console.log('[loadFromPath] Loaded seconds index:', secondsIndex);
+        const hoursIndex = await hoursIndexResponse.json();
+        console.log('[loadFromPath] Loaded hours index:', hoursIndex);
 
-        try { sbUpdateCsvProgress(0.2, 'Loading seconds data (this may take a moment)...'); } catch (_) {}
+        try { sbUpdateCsvProgress(0.2, 'Loading hours data...'); } catch (_) {}
 
-        // Load seconds data CSV
-        const dataFile = secondsIndex.data_file || 'data.csv';
-        const secondsDataResponse = await fetch(`${basePath}/resolutions/seconds/${dataFile}`);
-        if (!secondsDataResponse.ok) {
-            throw new Error(`Failed to load seconds data: ${secondsDataResponse.status}`);
+        // Load hours data CSV
+        const hoursDataFile = hoursIndex.data_file || 'data.csv';
+        const hoursDataResponse = await fetch(`${basePath}/resolutions/hours/${hoursDataFile}`);
+        if (!hoursDataResponse.ok) {
+            throw new Error(`Failed to load hours data: ${hoursDataResponse.status}`);
         }
-        const secondsCsvText = await secondsDataResponse.text();
-        console.log(`[loadFromPath] Loaded seconds CSV: ${secondsCsvText.length} bytes`);
+        const hoursCsvText = await hoursDataResponse.text();
+        console.log(`[loadFromPath] Loaded hours CSV: ${hoursCsvText.length} bytes`);
 
-        try { sbUpdateCsvProgress(0.5, 'Parsing CSV data...'); } catch (_) {}
+        try { sbUpdateCsvProgress(0.35, 'Parsing hours data...'); } catch (_) {}
 
-        // Parse the CSV data (reuse existing parseCSV logic style)
-        const packets = parseSecondsCSV(secondsCsvText);
-        console.log(`[loadFromPath] Parsed ${packets.length} second-level bins`);
+        // Parse the hours CSV data
+        const hoursPackets = parseSecondsCSV(hoursCsvText, 'hours');
+        console.log(`[loadFromPath] Parsed ${hoursPackets.length} hour-level bins`);
+
+        // Also preload minutes and seconds data (all single-file resolutions)
+        let minutesPackets = [];
+        let secondsPackets = [];
+
+        try { sbUpdateCsvProgress(0.45, 'Loading minutes data...'); } catch (_) {}
+
+        try {
+            const minutesIndexResponse = await fetch(`${basePath}/resolutions/minutes/index.json`);
+            if (minutesIndexResponse.ok) {
+                const minutesIndex = await minutesIndexResponse.json();
+                const minutesDataFile = minutesIndex.data_file || 'data.csv';
+                const minutesDataResponse = await fetch(`${basePath}/resolutions/minutes/${minutesDataFile}`);
+                if (minutesDataResponse.ok) {
+                    const minutesCsvText = await minutesDataResponse.text();
+                    minutesPackets = parseSecondsCSV(minutesCsvText, 'minutes');
+                    console.log(`[loadFromPath] Preloaded ${minutesPackets.length} minute-level bins`);
+                }
+            }
+        } catch (e) {
+            console.warn('[loadFromPath] Could not preload minutes data:', e);
+        }
+
+        try { sbUpdateCsvProgress(0.55, 'Loading seconds data...'); } catch (_) {}
+
+        try {
+            const secondsIndexResponse = await fetch(`${basePath}/resolutions/seconds/index.json`);
+            if (secondsIndexResponse.ok) {
+                const secondsIndex = await secondsIndexResponse.json();
+                const secondsDataFile = secondsIndex.data_file || 'data.csv';
+                const secondsDataResponse = await fetch(`${basePath}/resolutions/seconds/${secondsDataFile}`);
+                if (secondsDataResponse.ok) {
+                    const secondsCsvText = await secondsDataResponse.text();
+                    secondsPackets = parseSecondsCSV(secondsCsvText, 'seconds');
+                    console.log(`[loadFromPath] Preloaded ${secondsPackets.length} second-level bins`);
+                }
+            }
+        } catch (e) {
+            console.warn('[loadFromPath] Could not preload seconds data:', e);
+        }
+
+        // Use hours as the initial data (coarsest resolution for overview)
+        const packets = hoursPackets;
+        console.log(`[loadFromPath] Using ${packets.length} hour-level bins as initial data`);
 
         if (packets.length === 0) {
             throw new Error('No data parsed from seconds CSV');
@@ -5301,14 +5540,20 @@ async function loadFromPath(basePath = DEFAULT_DATA_PATH) {
 
         // Show message asking user to select IPs
         document.getElementById('loadingMessage').textContent =
-            `Loaded ${packets.length.toLocaleString()} second-level bins with ${uniqueIPs.length} IPs. Please select 2+ IP addresses to view connections.`;
+            `Loaded ${packets.length.toLocaleString()} hour-level bins with ${uniqueIPs.length} IPs. Please select 2+ IP addresses to view connections.`;
         document.getElementById('loadingMessage').style.display = 'block';
 
         try { sbUpdateCsvProgress(0.95, 'Initializing multi-resolution manager...'); } catch (_) {}
 
-        // Initialize the fetch-based resolution manager for milliseconds/raw data on zoom
-        // Store seconds data in the manager too for consistency
-        fetchResManager.secondsData = packets;
+        // Initialize the fetch-based resolution manager for higher-resolution data on zoom
+        // Store all single-file resolution data in the manager
+        fetchResManager.singleFileData.set('hours', hoursPackets);
+        if (minutesPackets.length > 0) {
+            fetchResManager.singleFileData.set('minutes', minutesPackets);
+        }
+        if (secondsPackets.length > 0) {
+            fetchResManager.singleFileData.set('seconds', secondsPackets);
+        }
         await initFetchResolutionManager(basePath);
 
         try { sbUpdateCsvProgress(1.0, 'Data loaded successfully!'); } catch (_) {}
@@ -5318,8 +5563,17 @@ async function loadFromPath(basePath = DEFAULT_DATA_PATH) {
             try { sbHideCsvProgress(); } catch (_) {}
         }, 1000);
 
-        console.log(`[loadFromPath] Successfully loaded ${packets.length} data points from ${basePath}`);
-        console.log(`[loadFromPath] Multi-resolution manager ready: ms=${fetchResManager.millisecondsIndex?.chunks?.length || 0} chunks, raw=${fetchResManager.rawIndex?.chunks?.length || 0} chunks`);
+        console.log(`[loadFromPath] Successfully loaded ${packets.length} hour-level bins from ${basePath}`);
+        console.log(`[loadFromPath] Multi-resolution manager ready with ${fetchResManager.indices.size} resolution indices`);
+        console.log(`[loadFromPath] Preloaded single-file resolutions: hours(${hoursPackets.length}), minutes(${minutesPackets.length}), seconds(${secondsPackets.length})`);
+
+        // Don't set initial zoom indicator here - wait for overview chart to determine resolution
+        // The onResolutionChange callback will sync the packets view with the overview
+        console.log(`[loadFromPath] Deferring zoom indicator until overview resolution is determined`);
+
+        // Store packet time extent for later use if needed
+        const packetTimeExtent = d3.extent(packets, d => d.binStart || d.timestamp);
+        console.log(`[loadFromPath] Packet time extent:`, packetTimeExtent);
 
     } catch (err) {
         console.error('[loadFromPath] Error loading data:', err);
@@ -5413,6 +5667,56 @@ async function loadFlowsFromPath(basePath = DEFAULT_FLOW_DATA_PATH) {
 
         console.log(`[loadFlowsFromPath] Total flows: ${totalFlows}, time extent:`, flowTimeExtent);
 
+        // Initialize adaptive overview loader early for resolution sync
+        // This allows the packets view to determine resolution matching the overview chart
+        try {
+            const indexPath = `${basePath}/indices/flow_bins_index.json`;
+            console.log(`[loadFlowsFromPath] Checking for multi-resolution index at ${indexPath}...`);
+            const indexResponse = await fetch(indexPath);
+            if (indexResponse.ok) {
+                adaptiveOverviewLoader = new AdaptiveOverviewLoader(basePath);
+                await adaptiveOverviewLoader.loadIndex();
+                console.log(`[loadFlowsFromPath] ✓ Adaptive overview loader initialized with resolutions:`,
+                    Object.keys(adaptiveOverviewLoader.index.resolutions));
+
+                // Capture flow time extent for fallback
+                const capturedFlowTimeExtent = flowTimeExtent.slice();
+
+                // Set up callback to sync zoom indicator when overview resolution changes
+                // The callback receives the time range directly from the overview loader
+                adaptiveOverviewLoader.onResolutionChange = (newResolution, oldResolution, timeInfo) => {
+                    console.log(`[Resolution Sync] Overview resolution changed: ${oldResolution} → ${newResolution}`, timeInfo);
+                    const mappedRes = OVERVIEW_TO_PACKET_RESOLUTION[newResolution];
+                    if (mappedRes && FETCH_RES_BY_NAME[mappedRes]) {
+                        // Get visible range from timeInfo, or compute from timeStart/timeEnd
+                        let visibleRangeUs = 0;
+                        if (timeInfo) {
+                            visibleRangeUs = timeInfo.timeRangeUs || (timeInfo.timeEnd - timeInfo.timeStart) || 0;
+                        }
+                        // Fallback to xScale, overviewTimeExtent, or flow extent
+                        if (visibleRangeUs <= 0 && xScale) {
+                            try {
+                                const domain = xScale.domain();
+                                visibleRangeUs = domain[1] - domain[0];
+                            } catch (e) {}
+                        }
+                        if (visibleRangeUs <= 0 && overviewTimeExtent) {
+                            visibleRangeUs = overviewTimeExtent[1] - overviewTimeExtent[0];
+                        }
+                        if (visibleRangeUs <= 0) {
+                            visibleRangeUs = capturedFlowTimeExtent[1] - capturedFlowTimeExtent[0];
+                        }
+
+                        const dataCount = fetchResManager.singleFileData.get(mappedRes)?.length || fullData.length;
+                        updateZoomIndicator(visibleRangeUs, mappedRes, dataCount);
+                        console.log(`[Resolution Sync] Updated packets view to: ${mappedRes}, range=${(visibleRangeUs/60_000_000).toFixed(1)} min, ${dataCount} points`);
+                    }
+                };
+            }
+        } catch (err) {
+            console.log(`[loadFlowsFromPath] No multi-resolution index found:`, err.message);
+        }
+
         // Create on-demand chunk loader using fetch
         const loadChunksForTimeRange = async (startTime, endTime, selectedIPs = null) => {
             const selectedIPSet = selectedIPs && selectedIPs.length > 0 ? new Set(selectedIPs) : null;
@@ -5499,9 +5803,23 @@ async function loadFlowsFromPath(basePath = DEFAULT_FLOW_DATA_PATH) {
  * Parse seconds-level CSV data (pre-binned format)
  * CSV columns: timestamp,bin_start,bin_end,src_ip,dst_ip,count,total_bytes,flag_type
  */
-function parseSecondsCSV(csvText) {
+/**
+ * Parse pre-binned CSV data from any single-file resolution (hours, minutes, seconds)
+ * @param {string} csvText - CSV content
+ * @param {string} resolution - Resolution name ('hours', 'minutes', 'seconds')
+ * @returns {Array} Parsed data objects
+ */
+function parseSecondsCSV(csvText, resolution = 'seconds') {
     const lines = csvText.split('\n').filter(line => line.trim().length > 0);
     if (lines.length < 2) return [];
+
+    // Determine bin size based on resolution
+    const binSizeMap = {
+        'hours': 3_600_000_000,    // 1 hour in microseconds
+        'minutes': 60_000_000,     // 1 minute in microseconds
+        'seconds': 1_000_000       // 1 second in microseconds
+    };
+    const defaultBinSize = binSizeMap[resolution] || 1_000_000;
 
     // Parse header
     const headers = lines[0].split(',').map(h => h.trim());
@@ -5527,19 +5845,19 @@ function parseSecondsCSV(csvText) {
         // Add binned-data metadata for visualization compatibility
         row.binned = true;
         row.binStart = row.bin_start || row.timestamp;
-        row.binEnd = row.bin_end || (row.timestamp + 1_000_000);
+        row.binEnd = row.bin_end || (row.timestamp + defaultBinSize);
         row.binCenter = Math.floor((row.binStart + row.binEnd) / 2);
         row.flagType = row.flag_type || 'OTHER';
         row.flags = flagTypeToFlags(row.flag_type);
         row.length = row.total_bytes || 0;
         row.preBinnedSize = row.binEnd - row.binStart;
-        row.resolution = 'seconds';
+        row.resolution = resolution;
 
         packets.push(row);
 
         // Log progress every 50k lines
         if (i % 50000 === 0) {
-            console.log(`[parseSecondsCSV] Parsed ${i}/${lines.length} lines...`);
+            console.log(`[parseSecondsCSV] Parsed ${i}/${lines.length} ${resolution} bins...`);
         }
     }
 

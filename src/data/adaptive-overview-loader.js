@@ -140,7 +140,7 @@ export class AdaptiveOverviewLoader {
     /**
      * Select the appropriate resolution based on visible time range
      * @param {number} timeRangeMinutes - Visible time range in minutes
-     * @returns {string} Resolution key ('1min', '10min', or 'hour')
+     * @returns {string} Resolution key ('1min' or 'hour')
      */
     selectResolution(timeRangeMinutes) {
         if (!this.index) {
@@ -152,7 +152,9 @@ export class AdaptiveOverviewLoader {
 
         // Check each resolution in order of granularity (finest first)
         // Use the resolution thresholds from the index file
+        // Skip '10min' resolution - only use '1min' and 'hour'
         for (const [key, config] of Object.entries(resolutions)) {
+            if (key === '10min') continue; // Skip 10-minute resolution
             if (config.use_when_range_minutes_lte !== undefined) {
                 if (timeRangeMinutes <= config.use_when_range_minutes_lte) {
                     return key;
@@ -259,10 +261,12 @@ export class AdaptiveOverviewLoader {
 
         // Track resolution changes
         if (resolution !== this.currentResolution) {
-            console.log(`[AdaptiveOverview] Resolution change: ${this.currentResolution} → ${resolution}`);
+            const oldResolution = this.currentResolution;
+            console.log(`[AdaptiveOverview] Resolution change: ${oldResolution} → ${resolution}`);
             this.currentResolution = resolution;
             if (this.onResolutionChange) {
-                this.onResolutionChange(resolution, this.currentResolution);
+                // Pass the time range so callback can use it for display
+                this.onResolutionChange(resolution, oldResolution, { timeStart, timeEnd, timeRangeUs });
             }
         }
 
@@ -283,10 +287,8 @@ export class AdaptiveOverviewLoader {
             binWidthUs
         );
 
-        // Re-bin for display if too many bins
-        const displayBins = aggregatedBins.length > targetBinCount * 1.5
-            ? this._rebinForDisplay(aggregatedBins, targetBinCount, timeStart, timeEnd)
-            : aggregatedBins;
+        // Use bins as-is without rebinning
+        const displayBins = aggregatedBins;
 
         console.log(`[AdaptiveOverview] getOverviewData:`, {
             resolution,
@@ -483,34 +485,52 @@ export class AdaptiveOverviewLoader {
 
     /**
      * Re-bin aggregated data for display when too many bins
+     * Uses time-grid-based rebinning to properly handle sparse data
      * @private
      */
     _rebinForDisplay(bins, targetBinCount, timeStart, timeEnd) {
         if (bins.length <= targetBinCount) return bins;
+        if (bins.length === 0) return bins;
 
-        const aggregationFactor = Math.ceil(bins.length / targetBinCount);
-        const displayBins = [];
+        // Calculate display bin width based on time range
+        const timeRange = timeEnd - timeStart;
+        const displayBinWidth = timeRange / targetBinCount;
 
-        for (let i = 0; i < bins.length; i += aggregationFactor) {
-            const chunk = bins.slice(i, i + aggregationFactor);
+        // Create a map for the display grid: displayBinIndex -> aggregated counts
+        const displayGrid = new Map();
 
-            const merged = {
-                binIndex: chunk[0].binIndex,
-                start: chunk[0].start,
-                end: chunk[chunk.length - 1].end,
-                counts: {},
-                totalFlows: 0
-            };
+        for (const bin of bins) {
+            // Skip bins outside time range
+            if (bin.end < timeStart || bin.start > timeEnd) continue;
 
-            for (const bin of chunk) {
-                for (const [key, count] of Object.entries(bin.counts)) {
-                    merged.counts[key] = (merged.counts[key] || 0) + count;
-                }
-                merged.totalFlows += bin.totalFlows;
+            // Determine which display bin this data falls into
+            const binMidpoint = (bin.start + bin.end) / 2;
+            const displayBinIndex = Math.floor((binMidpoint - timeStart) / displayBinWidth);
+
+            // Clamp to valid range
+            const clampedIndex = Math.max(0, Math.min(targetBinCount - 1, displayBinIndex));
+
+            if (!displayGrid.has(clampedIndex)) {
+                const displayStart = timeStart + clampedIndex * displayBinWidth;
+                displayGrid.set(clampedIndex, {
+                    binIndex: clampedIndex,
+                    start: displayStart,
+                    end: displayStart + displayBinWidth,
+                    counts: {},
+                    totalFlows: 0
+                });
             }
 
-            displayBins.push(merged);
+            const merged = displayGrid.get(clampedIndex);
+            for (const [key, count] of Object.entries(bin.counts)) {
+                merged.counts[key] = (merged.counts[key] || 0) + count;
+            }
+            merged.totalFlows += bin.totalFlows;
         }
+
+        // Convert to sorted array
+        const displayBins = Array.from(displayGrid.values())
+            .sort((a, b) => a.binIndex - b.binIndex);
 
         return displayBins;
     }

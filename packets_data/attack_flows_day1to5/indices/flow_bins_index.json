@@ -1,25 +1,32 @@
 {
   "resolutions": {
+    "1s": {
+      "file": "flow_bins_1s.json",
+      "bin_width_seconds": 1,
+      "bin_width_us": 1000000,
+      "bins_with_data": 33621,
+      "use_when_range_minutes_lte": 10
+    },
     "1min": {
       "file": "flow_bins_1min.json",
       "bin_width_minutes": 1,
       "bin_width_us": 60000000,
       "bins_with_data": 1135,
-      "use_when_range_minutes_lte": 30
+      "use_when_range_minutes_lte": 120
     },
     "10min": {
       "file": "flow_bins_10min.json",
       "bin_width_minutes": 10,
       "bin_width_us": 600000000,
       "bins_with_data": 321,
-      "use_when_range_minutes_lte": 300
+      "use_when_range_minutes_lte": 7200
     },
     "hour": {
       "file": "flow_bins_hour.json",
       "bin_width_minutes": 60,
       "bin_width_us": 3600000000,
       "bins_with_data": 97,
-      "use_when_range_minutes_gt": 300
+      "use_when_range_minutes_gt": 7200
     }
   },
   "time_range": {
