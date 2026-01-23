@@ -190,9 +190,21 @@ export class CSVResolutionManager {
             // Load single-file resolution data (e.g., seconds)
             await this._loadSingleFileData();
 
-            const firstRes = RESOLUTION_CONFIG[0].name;
-            const initialData = this.singleFileData.get(firstRes) || [];
-            console.log(`[CSVResManager] Initialized with ${initialData.length} ${firstRes} bins`);
+            // Return seconds-level data as default (better for most initial views)
+            // If seconds not available, fall back to coarser resolutions
+            const preferredOrder = ['seconds', 'minutes', 'hours'];
+            let initialData = [];
+            let initialRes = 'seconds';
+            for (const resName of preferredOrder) {
+                const data = this.singleFileData.get(resName);
+                if (data && data.length > 0) {
+                    initialData = data;
+                    initialRes = resName;
+                    this.currentResolution = resName;
+                    break;
+                }
+            }
+            console.log(`[CSVResManager] Initialized with ${initialData.length} ${initialRes} bins`);
 
             return initialData;
         } catch (err) {

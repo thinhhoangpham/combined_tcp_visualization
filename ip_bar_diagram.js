@@ -1057,10 +1057,6 @@ function updateTcpFlowPacketsGlobal() {
         if (dynamicLayer) dynamicLayer.style('display', 'none');
     }
     drawSelectedFlowArcs();
-    // Recompute radius scaling from currently visible dots
-    setTimeout(() => {
-        try { recomputeGlobalMaxBinCountFromVisibleDots(); } catch (_) {}
-    }, 120);
 
     // If a flow selection is active, recompute bins for the selection and render in dynamic layer
     if (showTcpFlows && selectedFlowIds.size > 0) {
@@ -1302,10 +1298,8 @@ function redrawSelectedFlowsView() {
     const rScale = d3.scaleSqrt().domain([1, Math.max(1, globalMaxBinCount)]).range([RADIUS_MIN, RADIUS_MAX]);
     renderMarksForLayerLocal(dynamicLayer, binnedPackets, rScale);
 
-    // After redraw, recompute sizes based on what is actually visible
-    setTimeout(() => { 
-        try { recomputeGlobalMaxBinCountFromVisibleDots(); } catch(_) {} 
-        // Sync worker with updated dynamic layer data
+    // Sync worker with updated dynamic layer data
+    setTimeout(() => {
         try { syncWorkerWithRenderedData(); } catch(_) {}
     }, 80);
     // Re-apply legend-based filtering
@@ -1705,45 +1699,22 @@ async function updateIPFilter() {
             }
             dataVersion++;
         } else {
-            // Determine which resolution data to use
-            // When adaptive overview is available, use minutes data to match overview's 1min resolution
-            let sourceData = fullData;
-            let usedResolution = 'hours';
-
-            if (adaptiveOverviewLoader && adaptiveOverviewLoader.index && fetchResManager.singleFileData) {
-                // Get the overview's current resolution directly, or default to minutes
-                const overviewRes = adaptiveOverviewLoader.currentResolution || '1min';
-                const mappedRes = OVERVIEW_TO_PACKET_RESOLUTION[overviewRes] || 'minutes';
-                const resData = fetchResManager.singleFileData.get(mappedRes);
-
-                if (resData && resData.length > 0) {
-                    sourceData = resData;
-                    usedResolution = mappedRes;
-                    console.log(`[updateIPFilter] Using ${mappedRes} resolution data (${resData.length} bins) to match overview ${overviewRes}`);
-                } else {
-                    // Fallback: try minutes directly
-                    const minutesData = fetchResManager.singleFileData.get('minutes');
-                    if (minutesData && minutesData.length > 0) {
-                        sourceData = minutesData;
-                        usedResolution = 'minutes';
-                        console.log(`[updateIPFilter] Using minutes resolution data (${minutesData.length} bins) as fallback`);
-                    }
-                }
-            }
-
-            // Use resolution-aware cache key
-            const resCacheKey = `${cacheKey}|${usedResolution}`;
-            if (filterCache.has(resCacheKey)) {
-                filteredData = filterCache.get(resCacheKey);
-                if (DEBUG) console.log('Using cached filteredData for key', resCacheKey, 'len', filteredData.length);
+            // Filter fullData by selected IPs (original simple approach)
+            if (filterCache.has(cacheKey)) {
+                filteredData = filterCache.get(cacheKey);
+                if (DEBUG) console.log('Using cached filteredData for key', cacheKey, 'len', filteredData.length);
             } else {
-                const result = sourceData.filter(packet =>
+                const result = fullData.filter(packet =>
                     selectedIPSet.has(packet.src_ip) && selectedIPSet.has(packet.dst_ip)
                 );
-                filterCache.set(resCacheKey, result);
+                filterCache.set(cacheKey, result);
                 filteredData = result;
-                console.log(`[updateIPFilter] Filtered ${usedResolution} data: ${result.length} bins for ${selectedIPs.length} IPs`);
+                if (DEBUG) console.log('Cached filteredData for key', cacheKey, 'len', filteredData.length);
             }
+
+            // Note: Time range filtering is NOT done here - the visualization handles it
+            // via xScale domain and getVisiblePackets. This allows the full data to be
+            // available for zooming/panning while the view focuses on the selected range.
             dataVersion++;
         }
 
@@ -2019,6 +1990,14 @@ async function updateIPFilter() {
         // Flow mode uses overview chart only - main chart is for packet-level visualization
         const isFlowModeOnly = flowDataState && (flowDataState.format === 'chunked_flows' || flowDataState.format === 'chunked_flows_by_ip_pair') && (!filteredData || filteredData.length === 0);
 
+        console.log('[updateIPFilter] Visualization decision:', {
+            isFlowModeOnly,
+            flowDataState: flowDataState?.format,
+            filteredDataLength: filteredData?.length,
+            fullDataLength: fullData?.length,
+            dataIsPreBinned
+        });
+
         if (isFlowModeOnly) {
             console.log('[Visualization] Skipping packet visualization - in flow mode with no packet data');
             // In flow mode, the overview chart handles visualization
@@ -2029,28 +2008,28 @@ async function updateIPFilter() {
         } else if (timearcsIPOrder && timearcsIPOrder.length > 0) {
             // Skip force layout if we have TimeArcs IP order - use it directly
             console.log('[Force Layout] Skipped - using TimeArcs vertical order');
+            console.log('[updateIPFilter] Calling visualizeTimeArcs with', filteredData.length, 'items');
             // Directly visualize without force layout
             visualizeTimeArcs(filteredData);
             try { drawFlagLegend(); } catch (_) {}
             updateIPStats(filteredData);
             setTimeout(() => {
-                try { recomputeGlobalMaxBinCountFromVisibleDots(); } catch (_) {}
                 // Apply TimeArcs time range zoom after visualization is ready
                 applyTimearcsTimeRangeZoom();
             }, 150);
         } else {
             // Compute force layout positions for IPs before visualization
+            console.log('[updateIPFilter] Using force layout path with', filteredData.length, 'items');
             computeForceLayoutPositions(filteredData, selectedIPs, () => {
                 // Recreate visualization with filtered data after force layout completes
+                console.log('[updateIPFilter] Force layout callback - calling visualizeTimeArcs');
                 visualizeTimeArcs(filteredData);
                 // Sidebar flag stats suppressed; render flags legend in-canvas
                 try { drawFlagLegend(); } catch (_) {}
                 // Update IP statistics for the current filtered data
                 updateIPStats(filteredData);
-                // Recompute size scaling once DOM updates complete
+                // Apply TimeArcs time range zoom after visualization is ready
                 setTimeout(() => {
-                    try { recomputeGlobalMaxBinCountFromVisibleDots(); } catch (_) {}
-                    // Apply TimeArcs time range zoom after visualization is ready
                     applyTimearcsTimeRangeZoom();
                 }, 150);
             });
@@ -2062,52 +2041,6 @@ async function updateIPFilter() {
     }
 }
 
-// Recompute global max bin count from visible dots, then reapply radii consistently
-function recomputeGlobalMaxBinCountFromVisibleDots() {
-    if (!mainGroup) return;
-    // Prefer the layer that is currently shown; avoids counting hidden groups
-    let activeLayer = null;
-    try {
-        const dynDisplayed = dynamicLayer && dynamicLayer.style('display') !== 'none';
-        activeLayer = dynDisplayed ? dynamicLayer : fullDomainLayer || mainGroup;
-    } catch (_) {
-        activeLayer = fullDomainLayer || mainGroup;
-    }
-    if (!activeLayer) return;
-    let maxCount = 0;
-    activeLayer.selectAll('.direction-dot').each(function(d) {
-        if (!d) return;
-        const sel = d3.select(this);
-        const display = sel.style('display');
-        const opacity = parseFloat(sel.style('opacity'));
-        if (display === 'none' || opacity === 0) return;
-        if (d.binned && d.count > 0) {
-            if (d.count > maxCount) maxCount = d.count;
-        }
-    });
-    // Consider bars too
-    activeLayer.selectAll('.bin-bar-segment').each(function(w) {
-        const d = w && w.datum ? w.datum : w;
-        const sel = d3.select(this);
-        const display = sel.style('display');
-        const opacity = parseFloat(sel.style('opacity'));
-        if (display === 'none' || opacity === 0) return;
-        if (d && d.binned && d.count > 0) {
-            if (d.count > maxCount) maxCount = d.count;
-        }
-    });
-    // If we found no eligible bins, keep the previous scaling to avoid jumps
-    if (maxCount <= 0) return;
-    globalMaxBinCount = Math.max(1, maxCount);
-    const scale = d3.scaleSqrt().domain([1, globalMaxBinCount]).range([RADIUS_MIN, RADIUS_MAX]);
-    mainGroup.selectAll('.direction-dot')
-        .attr('r', d => (d && d.binned && d.count > 1) ? scale(d.count) : RADIUS_MIN)
-        .attr('data-orig-r', d => (d && d.binned && d.count > 1) ? scale(d.count) : RADIUS_MIN);
-    // Keep the size legend in sync with the current scale
-    try { const axisBaseY = Math.max(20, bottomOverlayHeight - 20); drawSizeLegend(bottomOverlayRoot, width, bottomOverlayHeight, axisBaseY); } catch (_) {}
-    try { drawFlagLegend(); } catch (_) {}
-}
-        
 // Delegated to sidebar.js
 const createIPCheckboxes = (uniqueIPs) => sbCreateIPCheckboxes(uniqueIPs, async () => await updateIPFilter());
 
@@ -4030,6 +3963,9 @@ function visualizeTimeArcs(packets) {
     svg.selectAll('.node').call(dragBehavior).style('cursor', 'grab');
 
     let initialVisiblePackets = getVisiblePackets(packets, xScale);
+    console.log('[visualizeTimeArcs] xScale domain:', xScale.domain());
+    console.log('[visualizeTimeArcs] packets sample:', packets.slice(0, 2).map(p => ({ timestamp: p.timestamp, bin_start: p.bin_start, binStart: p.binStart })));
+    console.log('[visualizeTimeArcs] initialVisiblePackets:', initialVisiblePackets.length, 'of', packets.length);
     if (showTcpFlows && selectedFlowIds.size > 0 && tcpFlows.length > 0) {
         const selectedKeys = buildSelectedFlowKeySet();
         initialVisiblePackets = initialVisiblePackets.filter(packet => {
@@ -4084,9 +4020,11 @@ function visualizeTimeArcs(packets) {
     });
     fullDomainBinsCache.sorted = true;
 
+    console.log('[visualizeTimeArcs] Rendering', initialBinnedPackets.length, 'binned packets to fullDomainLayer');
     renderMarksForLayerLocal(fullDomainLayer, initialBinnedPackets, initialRScale);
 
     if (fullDomainLayer) fullDomainLayer.style("display", null);
+    console.log('[visualizeTimeArcs] fullDomainLayer display set to visible');
     if (dynamicLayer) dynamicLayer.style("display", "none");
 
     updateTcpFlowPacketsGlobal();
@@ -4409,9 +4347,10 @@ Check browser console (F12) for detailed error logs.`);
         }
 
         // Track if data is pre-binned (skip binning in render)
-        dataIsPreBinned = isPreBinned;
+        // Check both isPreBinned and isAggregated (folder_integration uses isAggregated)
+        dataIsPreBinned = isPreBinned || event.detail.isAggregated;
 
-        if (isPreBinned) {
+        if (dataIsPreBinned) {
             console.log(`Processing ${packets.length} pre-binned data points from folder (seconds resolution)...`);
             // Normalize pre-binned data: convert snake_case to camelCase for compatibility
             packets.forEach(p => {
@@ -4429,7 +4368,15 @@ Check browser console (F12) for detailed error logs.`);
         // Set data - for pre-binned data, this is seconds-resolution bins
         fullData = packets;
         filteredData = [];
-        
+
+        // Also populate fetchResManager.singleFileData so resolution lookup works correctly
+        // Check both isPreBinned and isAggregated (folder_integration uses isAggregated)
+        const isPreBinnedData = isPreBinned || event.detail.isAggregated;
+        if (packets.length > 0) {
+            fetchResManager.singleFileData.set('seconds', packets);
+            console.log(`[FolderData] Stored ${packets.length} seconds bins in fetchResManager.singleFileData`);
+        }
+
         // Convert flows index to flow objects (simplified format for now)
         tcpFlows = flowsIndex.map(flowSummary => ({
             id: flowSummary.id,
@@ -4702,8 +4649,19 @@ async function handleFlowDataLoaded(event) {
                         await adaptiveOverviewLoader.loadIndex();
                         hasAdaptiveOverview = true;
                         adaptiveBasePath = basePath;
-                        console.log(`[FlowData] ✓ Adaptive overview loader initialized from ${basePath} with resolutions:`,
-                            Object.keys(adaptiveOverviewLoader.index.resolutions));
+
+                        // Set initial resolution based on visible time extent - MUST happen before any IP selection
+                        const effectiveExtent = overviewTimeExtent || flowTimeExtent;
+                        if (effectiveExtent && effectiveExtent[0] < effectiveExtent[1]) {
+                            const initialTimeRangeMinutes = (effectiveExtent[1] - effectiveExtent[0]) / 60_000_000;
+                            adaptiveOverviewLoader.currentResolution = adaptiveOverviewLoader.selectResolution(initialTimeRangeMinutes);
+                            console.log(`[FlowData] ✓ Adaptive overview loader initialized from ${basePath} with resolutions:`,
+                                Object.keys(adaptiveOverviewLoader.index.resolutions),
+                                `initial resolution: ${adaptiveOverviewLoader.currentResolution} (${initialTimeRangeMinutes.toFixed(1)} min range)`);
+                        } else {
+                            console.log(`[FlowData] ✓ Adaptive overview loader initialized from ${basePath} with resolutions:`,
+                                Object.keys(adaptiveOverviewLoader.index.resolutions));
+                        }
                     }
                 } catch (err) {
                     console.log(`[FlowData] No multi-resolution index at ${basePath}`);
@@ -5493,9 +5451,21 @@ async function loadFromPath(basePath = DEFAULT_DATA_PATH) {
             console.warn('[loadFromPath] Could not preload seconds data:', e);
         }
 
-        // Use hours as the initial data (coarsest resolution for overview)
-        const packets = hoursPackets;
-        console.log(`[loadFromPath] Using ${packets.length} hour-level bins as initial data`);
+        // Use finest available single-file resolution for initial data
+        // Prefer seconds > minutes > hours for better compatibility with typical user selections
+        let packets;
+        let initialResolution;
+        if (secondsPackets.length > 0) {
+            packets = secondsPackets;
+            initialResolution = 'seconds';
+        } else if (minutesPackets.length > 0) {
+            packets = minutesPackets;
+            initialResolution = 'minutes';
+        } else {
+            packets = hoursPackets;
+            initialResolution = 'hours';
+        }
+        console.log(`[loadFromPath] Using ${packets.length} ${initialResolution}-level bins as initial data`);
 
         if (packets.length === 0) {
             throw new Error('No data parsed from seconds CSV');
@@ -5540,7 +5510,7 @@ async function loadFromPath(basePath = DEFAULT_DATA_PATH) {
 
         // Show message asking user to select IPs
         document.getElementById('loadingMessage').textContent =
-            `Loaded ${packets.length.toLocaleString()} hour-level bins with ${uniqueIPs.length} IPs. Please select 2+ IP addresses to view connections.`;
+            `Loaded ${packets.length.toLocaleString()} ${initialResolution}-level bins with ${uniqueIPs.length} IPs. Please select 2+ IP addresses to view connections.`;
         document.getElementById('loadingMessage').style.display = 'block';
 
         try { sbUpdateCsvProgress(0.95, 'Initializing multi-resolution manager...'); } catch (_) {}
@@ -5676,8 +5646,13 @@ async function loadFlowsFromPath(basePath = DEFAULT_FLOW_DATA_PATH) {
             if (indexResponse.ok) {
                 adaptiveOverviewLoader = new AdaptiveOverviewLoader(basePath);
                 await adaptiveOverviewLoader.loadIndex();
+
+                // Set initial resolution based on full time extent - MUST happen before any IP selection
+                const initialTimeRangeMinutes = (flowTimeExtent[1] - flowTimeExtent[0]) / 60_000_000;
+                adaptiveOverviewLoader.currentResolution = adaptiveOverviewLoader.selectResolution(initialTimeRangeMinutes);
                 console.log(`[loadFlowsFromPath] ✓ Adaptive overview loader initialized with resolutions:`,
-                    Object.keys(adaptiveOverviewLoader.index.resolutions));
+                    Object.keys(adaptiveOverviewLoader.index.resolutions),
+                    `initial resolution: ${adaptiveOverviewLoader.currentResolution} (${initialTimeRangeMinutes.toFixed(1)} min range)`);
 
                 // Capture flow time extent for fallback
                 const capturedFlowTimeExtent = flowTimeExtent.slice();

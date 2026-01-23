@@ -111,7 +111,7 @@ async function handleOpenFolder(mode = 'packets') {
         const hasCsvResolutions = await checkCsvResolutionsAvailable(folderHandle);
 
         // Validate folder format matches requested mode
-        const isFlowFormat = manifest?.format === 'multires_flows' || manifest?.format === 'chunked_flows' || manifest?.format === 'chunked';
+        const isFlowFormat = manifest?.format === 'multires_flows' || manifest?.format === 'chunked_flows' || manifest?.format === 'chunked' || manifest?.format === 'chunked_flows_by_ip_pair';
         const isPacketFormat = manifest?.format === 'multires_packets' || (!isFlowFormat && hasCsvResolutions);
 
         if (mode === 'flows' && !isFlowFormat) {
@@ -150,7 +150,7 @@ async function handleOpenFolder(mode = 'packets') {
         document.getElementById('loadDataBtn').addEventListener('click', () => {
             if (mode === 'flows') {
                 // Choose handler based on format
-                if (manifest?.format === 'chunked_flows' || manifest?.format === 'chunked') {
+                if (manifest?.format === 'chunked_flows' || manifest?.format === 'chunked' || manifest?.format === 'chunked_flows_by_ip_pair') {
                     handleChunkedFlowsFolder(result);
                 } else {
                     handleFlowMultiResFolder(result);
@@ -451,23 +451,61 @@ async function handleChunkedFlowsFolder(result) {
         // Load chunks metadata (small file with time ranges and category counts per chunk)
         showProgress('Loading chunks metadata...', 30);
         let chunksMeta = [];
-        try {
-            const metaFile = await flowsDir.getFileHandle('chunks_meta.json');
-            const metaContent = await (await metaFile.getFile()).text();
-            chunksMeta = JSON.parse(metaContent);
-            console.log(`[FolderIntegration] Loaded metadata for ${chunksMeta.length} chunks`);
-        } catch (metaErr) {
-            console.warn('[FolderIntegration] chunks_meta.json not found, will scan chunks:', metaErr.message);
-            // Fallback: scan chunk files (slower, for old data)
+        let isV3Format = false;  // v3 uses pairs_meta.json with flows organized by IP pair
+
+        // Check for v3 format (chunked_flows_by_ip_pair) first
+        const manifestFormat = result.manifest?.format;
+        if (manifestFormat === 'chunked_flows_by_ip_pair') {
             try {
-                for await (const entry of flowsDir.values()) {
-                    if (entry.kind === 'file' && entry.name.startsWith('chunk_') && entry.name.endsWith('.json')) {
-                        chunksMeta.push({ file: entry.name });
+                const pairsMetaFile = await flowsDir.getFileHandle('pairs_meta.json');
+                const pairsMetaContent = await (await pairsMetaFile.getFile()).text();
+                const pairsMeta = JSON.parse(pairsMetaContent);
+                isV3Format = true;
+
+                // Flatten pairs_meta into chunksMeta format for unified handling
+                // Each pair has: pair_folder, ips, chunks (array with file, start, end, count, etc.)
+                for (const pair of pairsMeta) {
+                    for (const chunk of (pair.chunks || [])) {
+                        chunksMeta.push({
+                            file: `by_pair/${pair.pair_folder}/${chunk.file}`,
+                            start: chunk.start,
+                            end: chunk.end,
+                            count: chunk.count,
+                            graceful: chunk.graceful || 0,
+                            abortive: chunk.abortive || 0,
+                            invalid: chunk.invalid || 0,
+                            ongoing: chunk.ongoing || 0,
+                            ips: pair.ips,
+                            ipPair: pair.pair_folder
+                        });
                     }
                 }
-                chunksMeta.sort((a, b) => a.file.localeCompare(b.file));
-            } catch (listErr) {
-                throw new Error(`Cannot access flows/ directory: ${listErr.message}`);
+                console.log(`[FolderIntegration] v3 format: Loaded ${pairsMeta.length} IP pairs, ${chunksMeta.length} total chunks`);
+            } catch (v3Err) {
+                console.warn('[FolderIntegration] pairs_meta.json not found:', v3Err.message);
+            }
+        }
+
+        // If not v3 or v3 failed, try v2 format (chunks_meta.json)
+        if (!isV3Format || chunksMeta.length === 0) {
+            try {
+                const metaFile = await flowsDir.getFileHandle('chunks_meta.json');
+                const metaContent = await (await metaFile.getFile()).text();
+                chunksMeta = JSON.parse(metaContent);
+                console.log(`[FolderIntegration] v2 format: Loaded metadata for ${chunksMeta.length} chunks`);
+            } catch (metaErr) {
+                console.warn('[FolderIntegration] chunks_meta.json not found, will scan chunks:', metaErr.message);
+                // Fallback: scan chunk files (slower, for old data)
+                try {
+                    for await (const entry of flowsDir.values()) {
+                        if (entry.kind === 'file' && entry.name.startsWith('chunk_') && entry.name.endsWith('.json')) {
+                            chunksMeta.push({ file: entry.name });
+                        }
+                    }
+                    chunksMeta.sort((a, b) => a.file.localeCompare(b.file));
+                } catch (listErr) {
+                    throw new Error(`Cannot access flows/ directory: ${listErr.message}`);
+                }
             }
         }
 
@@ -481,7 +519,8 @@ async function handleChunkedFlowsFolder(result) {
             flowsDir,
             chunksMeta,
             manifest: result.manifest,
-            chunkCache: new Map()  // Cache for loaded chunks
+            chunkCache: new Map(),  // Cache for loaded chunks
+            isV3Format: isV3Format
         };
 
         // Calculate totals from metadata
@@ -494,20 +533,21 @@ async function handleChunkedFlowsFolder(result) {
         }
         const timeExtent = [minTime, maxTime];
 
-        console.log(`[FolderIntegration] Loaded metadata for ${chunksMeta.length} chunks, ${totalFlows} total flows`);
+        console.log(`[FolderIntegration] Loaded metadata for ${chunksMeta.length} chunks, ${totalFlows} total flows, v3=${isV3Format}`);
 
         hideProgress();
 
         // Dispatch flowDataLoaded event with chunk metadata (not all flows)
         // The overview chart will bin from this metadata
         // Actual flows are loaded on-demand when user clicks
+        const actualFormat = isV3Format ? 'chunked_flows_by_ip_pair' : 'chunked_flows';
         const event = new CustomEvent('flowDataLoaded', {
             detail: {
                 chunksMeta: chunksMeta,
                 manifest: result.manifest,
                 totalFlows: totalFlows,
                 timeExtent: timeExtent,
-                format: 'chunked_flows',
+                format: actualFormat,
                 loadChunksForTimeRange: loadChunksForTimeRange  // On-demand loader
             }
         });
@@ -570,7 +610,18 @@ async function loadChunksForTimeRange(startTime, endTime, selectedIPs = null) {
 
         // Load chunk from disk
         try {
-            const fileHandle = await flowsDir.getFileHandle(chunk.file);
+            // Handle nested paths for v3 format (e.g., by_pair/172-28-4-7__192-168-1-1/chunk_00000.json)
+            let fileHandle;
+            if (chunk.file.includes('/')) {
+                const pathParts = chunk.file.split('/');
+                let currentDir = flowsDir;
+                for (let i = 0; i < pathParts.length - 1; i++) {
+                    currentDir = await currentDir.getDirectoryHandle(pathParts[i]);
+                }
+                fileHandle = await currentDir.getFileHandle(pathParts[pathParts.length - 1]);
+            } else {
+                fileHandle = await flowsDir.getFileHandle(chunk.file);
+            }
             const file = await fileHandle.getFile();
             const content = await file.text();
             const flows = JSON.parse(content).map(convertChunkedFlow);
@@ -1173,7 +1224,8 @@ function triggerVisualizationFromFolder(packets, flowsIndex, ipStats, flagStats,
         ipStats: ipStats,
         flagStats: flagStats,
         manifest: manifest,
-        sourceType: 'folder'
+        sourceType: 'folder',
+        isAggregated: true  // Data is pre-binned at seconds level
     };
     
     // Dispatch custom event that the visualization can listen to
