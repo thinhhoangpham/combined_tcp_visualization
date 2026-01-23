@@ -45,26 +45,21 @@ class LRUCache {
 /**
  * Single configuration for all resolution levels.
  * Order matters: first match wins (check from top to bottom).
- * To add a new resolution, just add an entry here - no other code changes needed.
  *
- * Resolution thresholds aligned with overview chart's adaptive loading (flow_bins_index.json):
- * - Overview uses 1min when range <= 120 minutes
- * - Overview uses hour when range > 7200 minutes (5 days)
- *
- * Packet view thresholds:
- * - hours: used when viewing > 120 minutes (matches overview switching to coarser)
- * - minutes: used when viewing > 10 minutes (matches overview's 1min range)
- * - seconds: used when viewing > 1 minute
- * - 100ms: used when viewing > 10 seconds
- * - 10ms: used when viewing > 1 second
- * - 1ms: used when viewing > 100ms
- * - raw: used when viewing < 100ms (individual packets)
+ * Thresholds:
+ * - hours: > 2 days visible
+ * - minutes: > 1 hour visible
+ * - seconds: > 1 minute visible
+ * - 100ms: > 10 seconds visible
+ * - 10ms: > 1 second visible
+ * - 1ms: > 100ms visible
+ * - raw: <= 100ms visible
  */
 const RESOLUTION_CONFIG = [
     {
         name: 'hours',
         dirName: 'hours',
-        threshold: 120 * 60 * 1_000_000, // > 120 minutes visible: use hours (matches overview 1min->hour transition)
+        threshold: 2 * 24 * 60 * 60 * 1_000_000, // > 2 days visible: use hours
         binSize: 3_600_000_000,          // 1 hour in microseconds
         preBinned: true,
         isSingleFile: true,              // hours uses a single data.csv
@@ -73,7 +68,7 @@ const RESOLUTION_CONFIG = [
     {
         name: 'minutes',
         dirName: 'minutes',
-        threshold: 10 * 60 * 1_000_000,  // > 10 minutes visible: use minutes (matches overview 1s->1min transition)
+        threshold: 60 * 60 * 1_000_000,  // > 1 hour visible: use minutes
         binSize: 60_000_000,             // 1 minute in microseconds
         preBinned: true,
         isSingleFile: true,              // minutes uses a single data.csv
@@ -82,7 +77,7 @@ const RESOLUTION_CONFIG = [
     {
         name: 'seconds',
         dirName: 'seconds',
-        threshold: 60 * 1_000_000,       // > 60s visible: use seconds
+        threshold: 60 * 1_000_000,       // > 1 minute visible: use seconds
         binSize: 1_000_000,              // 1 second in microseconds
         preBinned: true,
         isSingleFile: true,              // seconds uses a single data.csv
