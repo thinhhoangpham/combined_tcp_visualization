@@ -84,6 +84,7 @@ import {
     clearZoomTimeouts
 } from './src/interaction/timearcsZoomHandler.js';
 import { createIPFilterController } from './src/interaction/ip-filter-controller.js';
+import { tryLoadFlowList, getFlowListLoader } from './src/data/flow-list-loader.js';
 
 // Multi-resolution support (optional - may not be available)
 let getMultiResData = null;
@@ -539,7 +540,7 @@ function initializeBarVisualization() {
         getSelectedFlowIds: () => state.flows.selectedIds,
         updateTcpFlowPacketsGlobal: () => updateTcpFlowPacketsGlobal(),
         createFlowList: (flows) => createFlowList(flows),
-        // Load flows from chunks for a given time range (async, returns when flowDataState is available)
+        // Load flows for a given time range (async, prefers FlowListLoader CSV files when available)
         loadChunksForTimeRange: async (startTime, endTime) => {
             const state = getFlowDataState();
 
@@ -547,7 +548,16 @@ function initializeBarVisualization() {
             const selectedIPs = Array.from(document.querySelectorAll('#ipCheckboxes input[type="checkbox"]:checked'))
                 .map(cb => cb.value);
 
-            // Try chunked flows loader first, then multires loader
+            // Try FlowListLoader first (loads from CSV files - works without chunk files)
+            const flowListLoader = getFlowListLoader();
+            if (flowListLoader.isLoaded()) {
+                console.log(`[loadChunksForTimeRange] Using FlowListLoader CSV for ${selectedIPs.length} IPs, time: ${startTime}-${endTime}`);
+                const flows = await flowListLoader.filterByIPs(selectedIPs, [startTime, endTime]);
+                console.log(`[loadChunksForTimeRange] FlowListLoader returned ${flows.length} flows`);
+                return flows;
+            }
+
+            // Fall back to chunked flows loader
             if (state && typeof state.loadChunksForTimeRange === 'function') {
                 return await state.loadChunksForTimeRange(startTime, endTime, selectedIPs);
             }
@@ -2157,7 +2167,26 @@ function exportFlowToCSV(flow) {
     return exportFlowToCSVFromModule(flow, state.data.full, { classifyFlags, formatTimestamp });
 }
 
-const createFlowList = (flows) => sbCreateFlowListCapped(flows, state.flows.selectedIds, formatBytes, formatTimestamp, exportFlowToCSV, zoomToFlow, updateTcpFlowPacketsGlobal, flowColors, enterFlowDetailMode);
+const createFlowList = (flows) => {
+    // Determine if packet data is available
+    // If using flow_list.json (summary mode), flows don't have phases/packet data
+    const flowListLoader = getFlowListLoader();
+    const usingFlowListSummary = flowListLoader.isLoaded() && flowDataState?.hasFlowList;
+
+    // Check if any flow has phases data (indicates packet data is available)
+    const flowsHavePacketData = flows.length > 0 && flows.some(f =>
+        f.phases && (
+            (f.phases.establishment && f.phases.establishment.length > 0) ||
+            (f.phases.dataTransfer && f.phases.dataTransfer.length > 0) ||
+            (f.phases.closing && f.phases.closing.length > 0)
+        )
+    );
+
+    // Packet data available if flows have phases OR if we have CSV data
+    const hasPacketData = flowsHavePacketData || (state.data.full && state.data.full.length > 0);
+
+    return sbCreateFlowListCapped(flows, state.flows.selectedIds, formatBytes, formatTimestamp, exportFlowToCSV, zoomToFlow, updateTcpFlowPacketsGlobal, flowColors, enterFlowDetailMode, hasPacketData);
+};
 
 const updateTcpFlowStats = (flows) => sbUpdateTcpFlowStats(flows, state.flows.selectedIds, formatBytes);
 
@@ -3879,6 +3908,12 @@ async function handleChunkedFlowsFormat(detail, manifest, totalFlows, flowTimeEx
     // Load ip_pair_overview.json for instant overview chart rendering
     const ipPairOverview = await loadIpPairOverview(basePath);
 
+    // Try to load flow_list.json for flow list popup (lighter alternative to chunks)
+    const hasFlowList = await tryLoadFlowList(basePath);
+    if (hasFlowList) {
+        console.log('[FlowData] flow_list.json loaded - flow list popup will use summary data');
+    }
+
     // Store flow state for on-demand loading
     flowDataState = {
         chunksMeta,
@@ -3892,7 +3927,8 @@ async function handleChunkedFlowsFormat(detail, manifest, totalFlows, flowTimeEx
         basePath,
         flowBins,
         ipPairOverview,
-        hasAdaptiveOverview
+        hasAdaptiveOverview,
+        hasFlowList
     };
 
     // Update UI

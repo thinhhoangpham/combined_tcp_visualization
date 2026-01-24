@@ -131,7 +131,8 @@ packets_data/attack_flows_day1to5/
 │   ├── flow_bins_1s.json      # 1-second resolution bins (for zoomed views)
 │   ├── flow_bins_1min.json    # 1-minute resolution bins
 │   ├── flow_bins_10min.json   # 10-minute resolution bins
-│   └── flow_bins_hour.json    # Hourly resolution bins
+│   ├── flow_bins_hour.json    # Hourly resolution bins
+│   └── flow_list.json         # Flow summaries for flow list popup (no packet data)
 └── ips/
     ├── ip_stats.json          # Per-IP packet/byte counts
     ├── flag_stats.json        # Global TCP flag distribution
@@ -214,6 +215,49 @@ The `overview_chart.js` module (~900 LOC) provides:
 - **Instant loading**: Small files vs. thousands of chunk files
 - **Efficient filtering**: Pre-aggregated by IP pair
 - **Reduced memory**: No need to load full flow objects for overview
+
+### Flow List Summary File (flow_list.json)
+
+For deployments where chunk files are too large (e.g., GitHub Pages), generate a `flow_list.json` file that contains flow summaries without packet arrays:
+
+```bash
+python packets_data/generate_flow_list.py --input-dir packets_data/attack_flows_day1to5
+```
+
+**flow_list.json Structure**:
+```json
+{
+  "version": "1.0",
+  "format": "flow_list",
+  "total_flows": 50000,
+  "unique_ips": 294,
+  "time_range": { "start": 1257254652674641, "end": 1257654102004202 },
+  "flows": [
+    {
+      "id": 0,
+      "key": "172.28.4.7:54321->192.168.1.1:80",
+      "initiator": "172.28.4.7",
+      "responder": "192.168.1.1",
+      "initiatorPort": 54321,
+      "responderPort": 80,
+      "startTime": 1257254652674641,
+      "endTime": 1257254652800000,
+      "totalBytes": 12345,
+      "totalPackets": 42,
+      "state": "closed",
+      "closeType": "graceful",
+      "invalidReason": "",
+      "establishmentComplete": true
+    }
+  ]
+}
+```
+
+**When flow_list.json is present**:
+- Flow list popup works without loading chunk files
+- "View Packets" and "Export CSV" buttons are disabled (no packet data)
+- Overview chart still uses adaptive flow_bins for visualization
+- Size reduction: ~10-25x smaller than full chunks
 
 ### Packet Data Multi-Resolution (v3.3)
 
