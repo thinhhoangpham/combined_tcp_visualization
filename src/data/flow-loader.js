@@ -8,6 +8,7 @@ import {
     updateProgressIndicator,
     showCompletionThenRemove
 } from '../ui/loading-indicator.js';
+import { getFlowListLoader } from './flow-list-loader.js';
 
 /**
  * Find relevant time ranges from flow bins that contain flows for selected IP pairs.
@@ -235,22 +236,41 @@ export async function loadFlowData(context) {
         return { flows: [], skipSyncUpdates: false };
     }
 
-    // Case 2: Adaptive overview available - skip bulk chunk loading
+    // Case 2: Flow list CSV files available - defer loading until popup opens
+    // (Don't load CSVs now - just return empty and let popup load on-demand)
+    const flowListLoader = getFlowListLoader();
+    if (flowListLoader.isLoaded()) {
+        LOG(`[FlowListLoader] Flow list CSV available - will load on-demand when popup opens`);
+        console.log(`[FlowListLoader] Deferring CSV load for ${selectedIPs.length} IPs until popup opens`);
+
+        // Use adaptive overview for the overview chart
+        if (adaptiveOverviewLoader && flowDataState && flowDataState.hasAdaptiveOverview) {
+            (async () => {
+                await refreshAdaptiveOverview(selectedIPs);
+            })();
+        }
+
+        // Return empty flows - they'll be loaded when popup opens
+        // Set flag so UI knows flow list is available
+        return { flows: [], skipSyncUpdates: false, hasFlowListAvailable: true };
+    }
+
+    // Case 2.5: Adaptive overview available but NO flow list - skip bulk chunk loading
     if (adaptiveOverviewLoader && flowDataState && flowDataState.hasAdaptiveOverview) {
         LOG(`[AdaptiveOverview] Skipping bulk chunk loading - using pre-aggregated overview data`);
-        console.log(`[AdaptiveOverview] Skipping bulk chunk loading for ${selectedIPs.length} IPs - flows loaded on-demand`);
+        console.log(`[AdaptiveOverview] Skipping bulk chunk loading for ${selectedIPs.length} IPs - no flow list available`);
 
         // Fire and forget async update for overview and stats
         (async () => {
             await refreshAdaptiveOverview(selectedIPs);
 
-            // Update stats to show we're using adaptive mode
+            // Update stats to show we're using adaptive mode (no flow list)
             const tcpFlowStats = document.getElementById('tcpFlowStats');
             if (tcpFlowStats) {
                 const totalFlows = adaptiveOverviewLoader.index?.total_flows || 0;
                 tcpFlowStats.innerHTML = `<span style="color: #28a745;">Adaptive Overview Mode</span><br>
                     <span style="color: #666;">${totalFlows.toLocaleString()} total flows</span><br>
-                    <span style="color: #888; font-size: 11px;">Click overview bins to load flow details</span>`;
+                    <span style="color: #888; font-size: 11px;">Flow list not available (no flow_list files)</span>`;
             }
 
             // Update ground truth statistics

@@ -88,7 +88,7 @@ export function createIPFilterController(dependencies) {
             state.data.version++;
 
             // Load/filter flows based on data source
-            const { flows, skipSyncUpdates } = await loadFlowData({
+            const { flows, skipSyncUpdates, hasFlowListAvailable } = await loadFlowData({
                 getState,
                 flowDataState,
                 adaptiveOverviewLoader,
@@ -107,8 +107,18 @@ export function createIPFilterController(dependencies) {
                 // Clear selection to avoid stale selection across different IP filters
                 state.flows.selectedIds.clear();
 
-                // Update flow stats
-                updateTcpFlowStats(state.flows.current);
+                // Update flow stats - show special message if flow list available but deferred
+                if (hasFlowListAvailable && flows.length === 0) {
+                    // Flow list CSVs available but not loaded yet - show helpful message
+                    const tcpFlowStats = document.getElementById('tcpFlowStats');
+                    if (tcpFlowStats) {
+                        tcpFlowStats.innerHTML = `<span style="color: #28a745;">Flow List Available</span><br>
+                            <span style="color: #666;">Click on overview chart bars to view flows</span><br>
+                            <span style="color: #888; font-size: 11px;">Flows load on-demand for faster startup</span>`;
+                    }
+                } else {
+                    updateTcpFlowStats(state.flows.current);
+                }
 
                 // Refresh overview chart with updated flows for selected IPs
                 refreshAdaptiveOverview(selectedIPs)

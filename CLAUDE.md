@@ -57,7 +57,8 @@ The `index.html` redirects to `attack_timearcs.html` by default.
 │  data/        binning.js, csvParser.js, flowReconstruction.js
 │               resolution-manager.js, data-source.js      │
 │               component-loader.js, csv-resolution-manager.js
-│               aggregation.js                              │
+│               aggregation.js, flow-loader.js             │
+│               flow-list-loader.js (lazy CSV loading)     │
 │  tcp/         flags.js (TCP flag classification)         │
 │  groundTruth/ groundTruth.js (attack event loading)      │
 │  mappings/    decoders.js, loaders.js                    │
@@ -131,7 +132,10 @@ packets_data/attack_flows_day1to5/
 │   ├── flow_bins_1s.json      # 1-second resolution bins (for zoomed views)
 │   ├── flow_bins_1min.json    # 1-minute resolution bins
 │   ├── flow_bins_10min.json   # 10-minute resolution bins
-│   └── flow_bins_hour.json    # Hourly resolution bins
+│   ├── flow_bins_hour.json    # Hourly resolution bins
+│   └── flow_list/             # Flow summaries for flow list popup (lazy-loaded CSVs)
+│       ├── index.json         # IP pair index with file references
+│       └── *.csv              # Per-IP-pair CSV files (574 files, ~525MB total)
 └── ips/
     ├── ip_stats.json          # Per-IP packet/byte counts
     ├── flag_stats.json        # Global TCP flag distribution
@@ -215,6 +219,62 @@ The `overview_chart.js` module (~900 LOC) provides:
 - **Efficient filtering**: Pre-aggregated by IP pair
 - **Reduced memory**: No need to load full flow objects for overview
 
+### Flow List CSV Files (Lazy Loading)
+
+For deployments where chunk files are too large (e.g., GitHub Pages), generate per-IP-pair CSV files that contain flow summaries without packet arrays:
+
+```bash
+python packets_data/generate_flow_list.py --input-dir packets_data/attack_flows_day1to5
+```
+
+**Output Structure**:
+```
+indices/flow_list/
+├── index.json                      # IP pair index (87KB)
+├── 172-28-4-7__192-168-1-1.csv    # Flows for this IP pair
+├── 172-28-4-7__10-0-0-1.csv       # Another IP pair
+└── ...                             # 574 files total (~525MB)
+```
+
+**index.json Structure**:
+```json
+{
+  "version": "1.1",
+  "format": "flow_list_csv",
+  "columns": ["src", "dst", "st", "et", "p", "sp", "dp", "ct", "ir"],
+  "total_flows": 5482939,
+  "total_pairs": 574,
+  "unique_ips": 294,
+  "time_range": { "start": 1257254652674641, "end": 1257654102004202 },
+  "pairs": [
+    { "pair": "172.28.4.7<->192.168.1.1", "file": "172-28-4-7__192-168-1-1.csv", "count": 1523 }
+  ]
+}
+```
+
+**CSV Format** (columns: src, dst, st, et, p, sp, dp, ct, ir):
+```csv
+src,dst,st,et,p,sp,dp,ct,ir
+172.28.4.7,192.168.1.1,1257254652674641,1257254652800000,42,54321,80,graceful,
+15.231.243.19,172.28.4.7,1257257931810544,1257257931810544,1,5085,80,invalid,incomplete_no_synack
+```
+
+**Lazy Loading Behavior**:
+- On page load: Only `index.json` is fetched (~87KB)
+- On IP selection: No CSV files loaded yet; UI shows "Flow List Available"
+- On overview chart click: Only relevant IP pair CSVs are fetched for the clicked time range
+- Loaded CSVs are cached in memory for subsequent requests
+
+**Key Files**:
+- `src/data/flow-list-loader.js` - FlowListLoader class for parsing/caching CSVs
+- `src/data/flow-loader.js` - Decision tree that defers loading when FlowListLoader available
+
+**When flow_list CSVs are present**:
+- Flow list popup works without loading chunk files
+- "View Packets" and "Export CSV" buttons are disabled (no packet data)
+- Overview chart still uses adaptive flow_bins for visualization
+- CSV format is ~45% smaller than JSON; all files under GitHub's 100MB limit
+
 ### Packet Data Multi-Resolution (v3.3)
 
 The `csv-resolution-manager.js` handles zoom-level dependent packet data loading with 7 resolution levels:
@@ -263,6 +323,7 @@ The fisheye lens effect (`src/plugins/d3-fisheye.js`, wrapped by `src/scales/dis
 - **Multi-resolution loading**: Zoom-level dependent data loading (overview → detail)
 - **IP-pair organization** (v3): Chunks organized by IP pair enable efficient filtering—only load chunks for selected IP pairs instead of scanning all chunks
 - **Adaptive overview resolution**: Coarse bins for full view, fine bins when zoomed
+- **Lazy flow list loading**: CSV files only loaded when user clicks overview chart bars
 
 ## Module Dependencies
 

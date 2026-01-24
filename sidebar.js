@@ -160,7 +160,8 @@ export function hideCsvProgress() {
 }
 
 // Paginated flow list rendering
-export function createFlowListCapped(flows, selectedFlowIds, formatBytes, formatTimestamp, exportFlowToCSV, zoomToFlow, updateTcpFlowPacketsGlobal, flowColors = {}, enterFlowDetailMode = null) {
+// hasPacketData: if false, disables "Export CSV" and "View Packets" buttons (flow_list.json mode)
+export function createFlowListCapped(flows, selectedFlowIds, formatBytes, formatTimestamp, exportFlowToCSV, zoomToFlow, updateTcpFlowPacketsGlobal, flowColors = {}, enterFlowDetailMode = null, hasPacketData = true) {
     const container = document.getElementById('flowListModalList') || document.getElementById('flowList');
     if (!container) return;
     if (!flows || flows.length === 0) {
@@ -240,7 +241,7 @@ export function createFlowListCapped(flows, selectedFlowIds, formatBytes, format
     // Event handlers
     const renderPage = (page) => {
         state.currentPage = page;
-        createFlowListCapped(flows, selectedFlowIds, formatBytes, formatTimestamp, exportFlowToCSV, zoomToFlow, updateTcpFlowPacketsGlobal, flowColors, enterFlowDetailMode);
+        createFlowListCapped(flows, selectedFlowIds, formatBytes, formatTimestamp, exportFlowToCSV, zoomToFlow, updateTcpFlowPacketsGlobal, flowColors, enterFlowDetailMode, hasPacketData);
     };
     
     prevBtn.addEventListener('click', () => {
@@ -308,6 +309,16 @@ export function createFlowListCapped(flows, selectedFlowIds, formatBytes, format
             item.className = 'flow-item';
             item.dataset.flowId = String(flow.id);
             item.style.borderLeft = `4px solid ${color}`;
+
+            // Build button HTML based on whether packet data is available
+            const viewBtnHTML = hasPacketData
+                ? `<button class=\"flow-view-btn\" data-flow-id=\"${flow.id}\" style=\"padding:2px 8px; font-size:10px; border:1px solid #2196F3; border-radius:3px; background:#2196F3; color:white; cursor:pointer; font-weight:bold;\" title=\"View packets with arcs\">📊 View Packets</button>`
+                : `<button class=\"flow-view-btn\" data-flow-id=\"${flow.id}\" style=\"padding:2px 8px; font-size:10px; border:1px solid #ccc; border-radius:3px; background:#eee; color:#999; cursor:not-allowed; font-weight:bold;\" title=\"Packet data not available (summary mode)\" disabled>📊 View Packets</button>`;
+
+            const exportBtnHTML = hasPacketData
+                ? `<button class=\"flow-export-btn\" data-flow-id=\"${flow.id}\" style=\"margin-left:auto; padding:2px 6px; font-size:10px; border:1px solid #ced4da; border-radius:3px; background:#fff; cursor:pointer;\">Export CSV</button>`
+                : `<button class=\"flow-export-btn\" data-flow-id=\"${flow.id}\" style=\"margin-left:auto; padding:2px 6px; font-size:10px; border:1px solid #ccc; border-radius:3px; background:#eee; color:#999; cursor:not-allowed;\" title=\"Packet data not available (summary mode)\" disabled>Export CSV</button>`;
+
             item.innerHTML = `
                 <input type=\"checkbox\" class=\"flow-checkbox\" id=\"flow-${flow.id}\" ${selectedFlowIds.has(String(flow.id)) ? 'checked' : ''}>
                 <div class=\"flow-info\">
@@ -319,8 +330,8 @@ export function createFlowListCapped(flows, selectedFlowIds, formatBytes, format
                         <span>${duration}s duration</span>
                         <span>${closeTypeText}</span>
                         <button class=\"flow-zoom-btn\" data-flow-id=\"${flow.id}\" title=\"Zoom timeline to this flow\">🔍 Zoom</button>
-                        <button class=\"flow-view-btn\" data-flow-id=\"${flow.id}\" style=\"padding:2px 8px; font-size:10px; border:1px solid #2196F3; border-radius:3px; background:#2196F3; color:white; cursor:pointer; font-weight:bold;\" title=\"View packets with arcs\">📊 View Packets</button>
-                        <button class=\"flow-export-btn\" data-flow-id=\"${flow.id}\" style=\"margin-left:auto; padding:2px 6px; font-size:10px; border:1px solid #ced4da; border-radius:3px; background:#fff; cursor:pointer;\">Export CSV</button>
+                        ${viewBtnHTML}
+                        ${exportBtnHTML}
                     </div>
                     <div style=\"font-size:10px; color:#999; margin-top:3px;\">Start: ${startTime} • End: ${endTime}</div>
                 </div>`;
