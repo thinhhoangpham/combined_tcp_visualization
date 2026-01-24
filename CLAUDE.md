@@ -34,7 +34,6 @@ The `index.html` redirects to `attack_timearcs.html` by default.
 │  Main Visualizations                                     │
 │  attack_timearcs2.js (~3900 LOC) - Arc network view      │
 │  ip_bar_diagram.js (~4600 LOC)   - Packet analysis view  │
-│  ip_arc_diagram.js (~3900 LOC)   - IP arc diagram view   │
 └──────────────────────────┬──────────────────────────────┘
                            │
 ┌──────────────────────────┴──────────────────────────────┐
@@ -154,13 +153,12 @@ The code auto-detects format from `manifest.json` and loads appropriately.
 
 ## Key Implementation Details
 
-### Three Main Visualization Files
+### Two Main Visualization Files
 
 - `attack_timearcs2.js` (~3900 LOC) - Arc network view with force-directed IP layout
 - `ip_bar_diagram.js` (~4600 LOC) - Detailed packet analysis with stacked bars
-- `ip_arc_diagram.js` (~3900 LOC) - IP arc diagram variant
 
-All are monolithic files that compose modules from `/src`. They maintain extensive internal state (IP positions, selections, zoom state) and trigger re-renders on state changes.
+Both are monolithic files that compose modules from `/src`. They maintain extensive internal state (IP positions, selections, zoom state) and trigger re-renders on state changes.
 
 ### Overview Chart
 

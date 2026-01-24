@@ -2,192 +2,220 @@
 
 ## Executive Summary
 
-**File:** `/Volumes/Extreme Pro/combined_tcp_visualization/ip_bar_diagram.js`  
-**Total Lines:** 5,879  
-**Quality Rating:** Needs Work  
+**File:** `/Volumes/Extreme Pro/combined_tcp_visualization/ip_bar_diagram.js`
+**Total Lines:** ~4,974 (reduced from 5,879)
+**Quality Rating:** ~~Needs Work~~ **Improved - Acceptable**
 
-This file has grown into a monolithic script that violates multiple software engineering principles. While it functions correctly, the codebase suffers from excessive global state (50+ module-level variables), massive functions (several exceeding 400 lines), significant code duplication, and poor separation of concerns. The file would benefit from substantial refactoring to improve maintainability and reduce technical debt.
+This file was a monolithic script that violated multiple software engineering principles. Through systematic refactoring, the primary issues have been addressed: state consolidated into structured object, major functions extracted to focused modules, and error handling improved. Remaining concerns are code duplication and some inline styling, which are medium/low priority.
 
 ### Key Metrics
 
 | Metric | Count | Assessment |
 |--------|-------|------------|
-| Total Lines | 5,889 | Excessively large for a single module |
-| Function Definitions | 93 | Too many in one file |
+| Total Lines | ~4,974 | ~~Excessively large~~ **Reduced ~905 lines via extraction** |
+| Function Definitions | ~85 | ~~Too many~~ **Reduced via modularization** |
 | Console Statements | 268 | Excessive for production |
-| Module-level Variables | 50+ | Severe state management issue |
+| Module-level Variables | 50+ | ~~Severe state management issue~~ **Consolidated into state object** |
 | Try-catch Blocks | 100+ | ~~Many with silent error suppression~~ **Now logged** |
 | document.getElementById Calls | 42 | Scattered DOM access |
+| New Modules Created | 9 | `src/ui/`, `src/data/`, `src/interaction/`, `src/rendering/`, `src/layout/` |
 
 ---
 
 ## Critical Issues
 
-### 1. Excessive Global State (Lines 60-233)
+### ~~1. Excessive Global State (Lines 60-233)~~ RESOLVED
 
-**Severity:** Critical  
-**Estimated Technical Debt:** High
+**Severity:** ~~Critical~~ **Fixed (2026-01-23)**
 
-The file declares 50+ module-level variables with no encapsulation. This makes the code extremely difficult to reason about, test, or maintain.
+~~The file declares 50+ module-level variables with no encapsulation. This makes the code extremely difficult to reason about, test, or maintain.~~
 
-**Examples:**
-```javascript
-// Lines 154-233 - State variables with no encapsulation
-let fullData = [];
-let filteredData = [];
-let dataIsPreBinned = false;
-let svg, mainGroup, width, height, xScale, yScale, zoom;
-let bottomOverlaySvg = null;
-let bottomOverlayRoot = null;
-// ... 40+ more variables
-let tcpFlows = [];
-let currentFlows = [];
-let selectedFlowIds = new Set();
-let showTcpFlows = true;
-let showEstablishment = true;
-let showDataTransfer = true;
-let showClosing = true;
-let groundTruthData = [];
-let flowDetailMode = false;
-let flowDetailFlow = null;
-let flowDetailPackets = [];
-```
+**Resolution:** Consolidated ~30 module-level variables into a structured `state` object (lines 203-258) with 6 logical groups:
 
-**Recommendation:** Consolidate state into a single state object or class:
 ```javascript
 const state = {
-    data: { full: [], filtered: [], isPreBinned: false },
-    visualization: { svg: null, mainGroup: null, xScale: null, ... },
-    flows: { tcp: [], current: [], selectedIds: new Set() },
-    ui: { showTcpFlows: true, showEstablishment: true, ... }
+    // Phase 1: Flow Detail Mode
+    flowDetail: { mode, flow, packets, previousState },
+
+    // Phase 2: UI Toggles
+    ui: { showTcpFlows, showEstablishment, showDataTransfer, showClosing,
+          showGroundTruth, useBinning, renderMode },
+
+    // Phase 3: TimeArcs Integration
+    timearcs: { ipOrder, timeRange, overviewTimeExtent, intendedZoomDomain },
+
+    // Phase 4: Layout
+    layout: { ipPositions, ipOrder, pairs, forceLayout, forceNodes,
+              forceLinks, isForceLayoutRunning },
+
+    // Phase 5: Flows
+    flows: { tcp, current, selectedIds, groundTruth },
+
+    // Phase 6: Data
+    data: { full, filtered, isPreBinned, version, timeExtent }
 };
 ```
 
-**Estimated Savings:** Not line savings, but dramatic improvement in maintainability.
+**Benefits:**
+1. Logical grouping of related state variables
+2. Easier to understand state dependencies
+3. Clear namespace for each concern
+4. ~350 references updated throughout codebase
+
+**Deferred:** Phase 7 (visualization variables like `svg`, `xScale`, `zoom`) was intentionally skipped due to very high risk (~300+ references) and lower benefit-to-risk ratio.
 
 ---
 
 ## Major Improvements
 
-### 2. Massive Functions Requiring Decomposition
+### ~~2. Massive Functions Requiring Decomposition~~ PARTIALLY RESOLVED
 
-**Severity:** Major  
+**Severity:** ~~Major~~ **Partially Fixed (2026-01-23)**
 
-#### 2.1 `visualizeTimeArcs()` (Lines 3464-4059, ~595 lines)
+#### ~~2.1 `visualizeTimeArcs()` (Lines 3464-4059, ~595 lines)~~ RESOLVED
 
-This function is the largest in the file and handles:
-- DOM clearing
-- Data validation
-- IP counting and sorting
-- Scale creation
-- SVG setup
-- Overlay initialization
-- Axis creation
-- Nested function definitions
-- Zoom behavior setup
-- Initial rendering
-- Legend drawing
-- Ground truth drawing
+**Status:** ~~595 lines~~ **Now ~297 lines (50% reduction)**
 
-**Problematic nested functions:**
-- `formatDuration()` (lines 3621-3629)
-- `updateZoomDurationLabel()` (lines 3632-3641)
-- `zoomed()` handler (lines 3685-3929, ~245 lines!)
+~~This function is the largest in the file and handles:~~
+~~- DOM clearing~~
+~~- Data validation~~
+~~- IP counting and sorting~~
+~~- Scale creation~~
+~~- SVG setup~~
+~~- Overlay initialization~~
+~~- Axis creation~~
+~~- Nested function definitions~~
+~~- Zoom behavior setup~~
+~~- Initial rendering~~
+~~- Legend drawing~~
+~~- Ground truth drawing~~
 
-**Recommendation:** Extract into smaller focused functions:
-```javascript
-function visualizeTimeArcs(packets) {
-    const config = prepareVisualizationConfig(packets);
-    const scales = createScales(config);
-    const svgElements = setupSVGStructure(config, scales);
-    initializeZoomBehavior(svgElements, scales);
-    performInitialRender(packets, scales);
-    drawLegends();
-}
-```
+**Resolution:** Extracted into 4 new modules:
 
-**Estimated Savings:** 400-500 lines through extraction.
+| Module | Location | Lines | Exports |
+|--------|----------|-------|---------|
+| `ipPositioning.js` | `src/layout/` | ~60 | `computeIPCounts`, `computeIPPositioning`, `applyIPPositioningToState` |
+| `svgSetup.js` | `src/rendering/` | ~140 | `createSVGStructure`, `createBottomOverlay`, `renderIPRowLabels`, `resizeBottomOverlay` |
+| `initialRender.js` | `src/rendering/` | ~90 | `prepareInitialRenderData`, `performInitialRender`, `createRadiusScale` |
+| `timearcsZoomHandler.js` | `src/interaction/` | ~270 | `createTimeArcsZoomHandler`, `createDurationLabelUpdater`, `clearZoomTimeouts` |
 
----
+**Benefits:**
+1. Function reduced from ~595 to ~297 lines (50% reduction)
+2. Nested `formatDuration()` removed - uses existing `src/utils/formatters.js`
+3. Nested `updateZoomDurationLabel()` extracted to module
+4. Nested `zoomed()` handler (~245 lines) extracted to separate module
+5. Clear 21-step organization with inline comments
+6. Reusable modules for testing
 
-#### 2.2 `updateIPFilter()` (Lines 1663-2051, ~388 lines)
-
-This async function handles:
-- Selected IP collection
-- Data filtering
-- Force layout computation
-- Multi-resolution data loading
-- Overview chart updates
-- Packet binning
-- Rendering
-
-**Recommendation:** Split into:
-- `collectSelectedIPs()`
-- `filterDataByIPs(selectedIPs)`
-- `computeForceLayoutAsync(selectedIPs)`
-- `loadMultiResolutionData(selectedIPs)`
-- `updateVisualization(filteredData)`
-
-**Estimated Savings:** 250-300 lines through extraction.
+**Actual Savings:** ~298 lines extracted to modules.
 
 ---
 
-#### 2.3 `handleFlowDataLoaded()` (Lines 4473-4827, ~354 lines)
+#### ~~2.2 `updateIPFilter()` (Lines 1663-2051, ~388 lines)~~ RESOLVED
 
-This event handler does too much:
-- Time extent calculation
-- Multiple format handling (chunked_flows, chunked_flows_by_ip_pair)
-- Adaptive loader initialization
-- Synthetic flow creation
-- UI updates
+**Status:** ~~388 lines~~ **Now ~35 lines (91% reduction)**
 
-**Recommendation:** Create separate handlers for each format:
+~~This async function handles:~~
+~~- Selected IP collection~~
+~~- Data filtering~~
+~~- Force layout computation~~
+~~- Multi-resolution data loading~~
+~~- Overview chart updates~~
+~~- Packet binning~~
+~~- Rendering~~
+
+**Resolution:** Extracted into 4 new modules:
+
+| Module | Location | Lines | Exports |
+|--------|----------|-------|---------|
+| `loading-indicator.js` | `src/ui/` | ~115 | `showLoadingOverlay`, `hideLoadingOverlay`, `createProgressIndicator`, `updateProgressIndicator`, `removeProgressIndicator`, `showCompletionThenRemove` |
+| `packet-filter.js` | `src/data/` | ~95 | `getSelectedIPsFromDOM`, `buildIPPairKeys`, `filterPacketsByIPs`, `createSelectedIPSet` |
+| `flow-loader.js` | `src/data/` | ~330 | `loadFlowData`, `loadChunkedFlows`, `filterFlowsByIPs` |
+| `ip-filter-controller.js` | `src/interaction/` | ~185 | `createIPFilterController` |
+
+**Benefits:**
+1. Function reduced from ~388 to ~35 lines (91% reduction)
+2. Lazy initialization pattern handles JavaScript execution order
+3. Clean separation: UI feedback, packet filtering, flow loading, orchestration
+4. Context pattern with getters for mutable state access
+5. Reusable modules with JSDoc documentation
+6. Progress indicator logic now centralized and reusable
+
+**Actual Savings:** ~353 lines extracted to modules (~725 lines total new module code).
+
+---
+
+#### ~~2.3 `handleFlowDataLoaded()` (Lines 4473-4827, ~354 lines)~~ RESOLVED
+
+**Status:** ~~354 lines~~ **Now 28 lines (92% reduction)**
+
+~~This event handler does too much:~~
+~~- Time extent calculation~~
+~~- Multiple format handling (chunked_flows, chunked_flows_by_ip_pair)~~
+~~- Adaptive loader initialization~~
+~~- Synthetic flow creation~~
+~~- UI updates~~
+
+**Resolution:** Refactored into dispatcher pattern with format-specific handlers:
 ```javascript
 async function handleFlowDataLoaded(event) {
-    const detail = event.detail;
-    const handler = getFormatHandler(detail.format);
-    await handler.process(detail);
+    computeTimeArcsRange({ timeRange, flowTimeExtent, stateTimearcs });
+    if (format === 'chunked_flows' && detail.chunksMeta) {
+        await handleChunkedFlowsFormat(detail, ...);
+    } else if (format === 'chunked_flows' && detail.flows) {
+        handleLegacyFlowsFormat(detail, ...);
+    } else {
+        handleMultiresFlowsFormat(detail, ...);
+    }
 }
 ```
 
-**Estimated Savings:** 200-250 lines through extraction.
+**New module `src/data/flow-data-handler.js`** (327 lines) with:
+- `computeTimeArcsRange()` - TimeArcs range conversion with unit detection
+- `createSyntheticFlowsFromChunks()` - Synthetic flow generation
+- `initializeAdaptiveLoader()` - Multi-resolution loader setup
+- `loadFlowBinsFallback()`, `loadIpPairOverview()` - Data loading helpers
+- `updateFlowDataUI()`, `calculateChartDimensions()` - UI helpers
+
+**Actual Savings:** 171 lines in ip_bar_diagram.js (354 → 28 line dispatcher + ~143 lines for 3 format handlers).
 
 ---
 
-### 3. The Zoomed Handler (Lines 3685-3929, ~245 lines)
+### ~~3. The Zoomed Handler (Lines 3685-3929, ~245 lines)~~ RESOLVED
 
-**Severity:** Major  
-**Location:** Nested inside `visualizeTimeArcs()`
+**Severity:** ~~Major~~ **Fixed (2026-01-23)**
+**Location:** ~~Nested inside `visualizeTimeArcs()`~~ **Now in `src/interaction/timearcsZoomHandler.js`**
 
-This is a nested function that handles all zoom events. It contains:
-- Flow detail mode handling (lines 3687-3717)
-- Domain calculations (lines 3719-3731)
-- Axis updates (lines 3740-3747)
-- Zoom indicator updates (lines 3749-3758)
-- Cached layer toggling (lines 3760-3768)
-- Handshake/ground truth redraws (lines 3771-3779)
-- Complex async binning logic (lines 3782-3928)
+~~This is a nested function that handles all zoom events. It contains:~~
+~~- Flow detail mode handling (lines 3687-3717)~~
+~~- Domain calculations (lines 3719-3731)~~
+~~- Axis updates (lines 3740-3747)~~
+~~- Zoom indicator updates (lines 3749-3758)~~
+~~- Cached layer toggling (lines 3760-3768)~~
+~~- Handshake/ground truth redraws (lines 3771-3779)~~
+~~- Complex async binning logic (lines 3782-3928)~~
 
-**Problems:**
-1. Too long for a nested function
-2. Mixes flow detail mode with normal mode
-3. Contains async logic with complex branching
-4. Hard to test in isolation
+**Resolution:** Extracted to `src/interaction/timearcsZoomHandler.js` (~270 lines):
 
-**Recommendation:** Extract to a separate module:
 ```javascript
-// src/interaction/zoomHandler.js
-export function createZoomHandler(config) {
-    return function zoomed({ transform, sourceEvent }) {
-        if (config.flowDetailMode) {
-            return handleFlowDetailZoom(transform, sourceEvent);
-        }
-        return handleNormalZoom(transform, sourceEvent);
-    };
-}
+// src/interaction/timearcsZoomHandler.js
+export function createTimeArcsZoomHandler(context) { ... }  // Main zoom handler
+export function createDurationLabelUpdater(context) { ... } // Duration label updates
+export function clearZoomTimeouts() { ... }                 // Cleanup function
 ```
 
-**Estimated Savings:** 200 lines by extracting to module.
+**Key Design Decisions:**
+1. **Context pattern with getters** - Mutable state accessed via getter functions (`getXScale()`, `getState()`) to handle closure issues
+2. **Module-level timeouts** - `zoomTimeout` and `handshakeTimeout` managed within module
+3. **Dependency injection** - All external functions passed via context object for testability
+
+**Benefits:**
+1. No longer a nested function - can be tested in isolation
+2. Clear separation of concerns
+3. Reusable across different visualizations
+4. Module-level timeout management prevents memory leaks
+
+**Actual Savings:** ~245 lines extracted to module.
 
 ---
 
@@ -239,27 +267,23 @@ const [d0, d1] = [Math.floor(domain[0]), Math.floor(domain[1])];
 
 ---
 
-#### 4.3 CSV Parsing Functions (3 similar implementations)
+#### ~~4.3 CSV Parsing Functions (3 similar implementations)~~ RESOLVED
 
-- `parseBinnedCSV()` (lines 5282-5321)
-- `parseRawCSV()` (lines 5327-5359)
-- `parseSecondsCSV()` (lines 5787-5840)
+**Status:** ~~3 separate functions (127 lines)~~ **Now 1 generic + 3 wrappers (80 lines)**
 
-All three functions share ~80% similar logic for:
-- Splitting lines
-- Parsing headers
-- Iterating rows
-- Type conversion
+~~- `parseBinnedCSV()` (lines 5282-5321)~~
+~~- `parseRawCSV()` (lines 5327-5359)~~
+~~- `parseSecondsCSV()` (lines 5787-5840)~~
 
-**Recommendation:** Create a generic CSV parser with configuration:
+**Resolution:** Created `parsePacketCSV(csvText, config)` generic function with configuration object:
 ```javascript
-function parseCSV(csvText, config) {
-    const { numericFields, booleanFields, postProcess } = config;
+function parsePacketCSV(csvText, config = {}) {
+    const { numericFields, binned, binSize, resolution, progressInterval } = config;
     // Shared parsing logic
 }
 ```
 
-**Estimated Savings:** 80-100 lines.
+Original functions converted to thin wrappers for backwards compatibility. **Actual Savings:** 47 lines.
 
 ---
 
@@ -317,34 +341,30 @@ try { applyInvalidReasonFilter(); } catch(e) { logCatchError('applyInvalidReason
 
 ---
 
-### 6. Dead/Unused Code
+### ~~6. Dead/Unused Code~~ RESOLVED
 
-**Severity:** Medium
+**Severity:** ~~Medium~~ **Fixed (2026-01-23)**
 
-#### 6.1 Empty Function Bodies
+#### ~~6.1 Empty Function Bodies~~ REMOVED
 
-```javascript
-// Line 3462
-async function processTcpFlowsChunked(packets) { /* Not invoked by default; omitted in externalization */ }
+~~```javascript~~
+~~async function processTcpFlowsChunked(packets) { /* Not invoked */ }~~
+~~function updateHandshakeLinesGlobal() { /* disabled in UI */ }~~
+~~function updateClosingLinesGlobal() { /* disabled in UI */ }~~
+~~```~~
 
-// Lines 1522-1523
-function updateHandshakeLinesGlobal() { /* Handshake lines group present but disabled in UI */ }
-function updateClosingLinesGlobal() { /* Closing lines group present but disabled in UI */ }
-```
+#### ~~6.2 Commented-out Code~~ REMOVED
 
-#### 6.2 Commented-out Code
+~~```javascript~~
+~~// applyBrushSelectionPrefilter(); // Commented out~~
+~~```~~
 
-```javascript
-// Line 4428
-// applyBrushSelectionPrefilter(); // Commented out - moved to handleFlowDataLoaded
+**Resolution:** Verified no references to dead functions via grep, then removed:
+- 3 empty function definitions
+- 2 commented-out function calls with explanatory comments
+- Associated orphaned comments
 
-// Line 5497
-// applyBrushSelectionPrefilter(); // Commented out - moved to handleFlowDataLoaded
-```
-
-**Recommendation:** Remove dead code entirely. Use version control to recover if needed.
-
-**Estimated Savings:** 20-30 lines.
+**Actual Savings:** 16 lines.
 
 ---
 
@@ -462,19 +482,19 @@ indicator.style.cssText = 'position: fixed; top: 10px; left: 50%; transform: tra
 
 | # | Issue | Lines Affected | Estimated Savings | Effort |
 |---|-------|----------------|-------------------|--------|
-| 1 | Extract state into StateManager class | 60-233 | Maintainability | High |
-| 2 | Break up `visualizeTimeArcs()` | 3464-4059 | 400+ lines | High |
-| 3 | Break up `updateIPFilter()` | 1663-2051 | 250+ lines | Medium |
-| 4 | Extract zoom handler to module | 3685-3929 | 200+ lines | Medium |
+| ~~1~~ | ~~Extract state into StateManager class~~ | ~~60-233~~ | ~~Maintainability~~ | **DONE** |
+| ~~2~~ | ~~Break up `visualizeTimeArcs()`~~ | ~~3464-4059~~ | ~~400+ lines~~ | **DONE** (298 lines extracted) |
+| ~~3~~ | ~~Break up `updateIPFilter()`~~ | ~~1663-2051~~ | ~~250+ lines~~ | **DONE** (353 lines extracted) |
+| ~~4~~ | ~~Extract zoom handler to module~~ | ~~3685-3929~~ | ~~200+ lines~~ | **DONE** (part of #2) |
 | ~~5~~ | ~~Add proper error handling~~ | ~~Throughout~~ | ~~Debug time~~ | **DONE** |
 
 ### Medium Priority
 
 | # | Issue | Lines Affected | Estimated Savings | Effort |
 |---|-------|----------------|-------------------|--------|
-| 6 | Consolidate CSV parsers | 5282-5359, 5787-5840 | 80-100 lines | Medium |
-| 7 | Extract `handleFlowDataLoaded()` handlers | 4473-4827 | 200+ lines | Medium |
-| 8 | Remove dead code | Various | 20-30 lines | Low |
+| ~~6~~ | ~~Consolidate CSV parsers~~ | ~~5282-5359, 5787-5840~~ | ~~80-100 lines~~ | **DONE** (47 lines saved) |
+| ~~7~~ | ~~Extract `handleFlowDataLoaded()` handlers~~ | ~~4473-4827~~ | ~~200+ lines~~ | **DONE** (171 lines saved) |
+| ~~8~~ | ~~Remove dead code~~ | ~~Various~~ | ~~20-30 lines~~ | **DONE** (16 lines removed) |
 | 9 | Add logging utility | Throughout | Maintainability | Low |
 
 ### Low Priority
@@ -508,10 +528,21 @@ More importantly, the remaining code would be:
 This file exhibits classic symptoms of organic code growth without periodic refactoring. While functional, it has accumulated significant technical debt. The primary issues are:
 
 1. **Monolithic structure** - 92 functions in one file
-2. **Global state explosion** - 50+ module-level variables
-3. **Function bloat** - Multiple functions exceeding 300 lines
+2. ~~**Global state explosion** - 50+ module-level variables~~ **FIXED** - Consolidated into structured `state` object with 6 logical groups
+3. ~~**Function bloat** - Multiple functions exceeding 300 lines~~ **FIXED** - `visualizeTimeArcs()` reduced 50% (595→297), `updateIPFilter()` reduced 91% (388→35)
 4. ~~**Error hiding** - 40+ silent catch blocks~~ **FIXED** - All 77 catch blocks now log errors via `logCatchError()`
 5. **Duplication** - Same patterns repeated throughout
+
+**Progress Summary (as of 2026-01-23):**
+- **5 of 5 high-priority issues resolved**
+- **3 of 4 medium-priority issues resolved**
+- ~905 lines reduced total (5,879 → 4,974) - **15.4% reduction**
+- ~978 lines extracted to 9 new reusable modules
+- Main visualization function reduced by 50% (595→297 lines)
+- IP filter function reduced by 91% (388→35 lines)
+- CSV parsers consolidated: 3 functions → 1 generic + 3 thin wrappers (47 lines saved)
+- Flow data handler refactored: 354→28 line dispatcher + format handlers (171 lines saved)
+- Dead code removed: 3 empty functions + commented-out code (16 lines removed)
 
 The recommended approach is incremental refactoring, starting with the state management and largest functions, then progressively extracting smaller pieces. This will reduce the risk of regression while improving code quality.
 
@@ -527,3 +558,10 @@ The recommended approach is incremental refactoring, starting with the state man
 | Date | Issue | Resolution |
 |------|-------|------------|
 | 2026-01-23 | Silent Error Suppression | Added `logCatchError()` helper and updated 77 catch blocks to log errors with context when DEBUG=true |
+| 2026-01-23 | Excessive Global State | Consolidated ~30 module-level variables into structured `state` object with 6 logical groups: `flowDetail`, `ui`, `timearcs`, `layout`, `flows`, `data`. Updated ~350 references throughout codebase. Phase 7 (visualization vars) deferred. |
+| 2026-01-23 | Break up `visualizeTimeArcs()` | Reduced from ~595 to ~297 lines (50%). Extracted 4 new modules: `src/layout/ipPositioning.js` (IP ordering), `src/rendering/svgSetup.js` (SVG structure), `src/rendering/initialRender.js` (initial render), `src/interaction/timearcsZoomHandler.js` (zoom handler). Removed nested `formatDuration()` in favor of existing `src/utils/formatters.js`. |
+| 2026-01-23 | Extract zoom handler | The ~245-line nested `zoomed()` function extracted to `src/interaction/timearcsZoomHandler.js` with context pattern for mutable state access. Exports: `createTimeArcsZoomHandler`, `createDurationLabelUpdater`, `clearZoomTimeouts`. |
+| 2026-01-23 | Break up `updateIPFilter()` | Reduced from ~388 to ~35 lines (91%). Extracted 4 new modules: `src/ui/loading-indicator.js` (loading overlay/progress), `src/data/packet-filter.js` (IP-based filtering with cache), `src/data/flow-loader.js` (flow loading decision tree), `src/interaction/ip-filter-controller.js` (main orchestrator). Uses lazy initialization pattern and context with getters for mutable state. |
+| 2026-01-23 | Consolidate CSV parsers | Created generic `parsePacketCSV()` function (55 lines) with config object for numericFields, binned flag, binSize, resolution, and progressInterval. Replaced `parseBinnedCSV` (40 lines), `parseRawCSV` (33 lines), and `parseSecondsCSV` (54 lines) with thin wrappers totaling 29 lines. Net savings: 47 lines (127 → 80). Backwards compatible - no call site changes required. |
+| 2026-01-23 | Extract `handleFlowDataLoaded()` handlers | Reduced from 354 to 28 lines (92%). Created `src/data/flow-data-handler.js` (327 lines) with helper functions: `computeTimeArcsRange()` (time unit detection, range conversion), `createSyntheticFlowsFromChunks()`, `initializeAdaptiveLoader()`, `loadFlowBinsFallback()`, `loadIpPairOverview()`, `updateFlowDataUI()`, `calculateChartDimensions()`. Added 3 format handlers in main file: `handleChunkedFlowsFormat()` (72 lines), `handleLegacyFlowsFormat()` (25 lines), `handleMultiresFlowsFormat()` (46 lines). Net savings: 171 lines in ip_bar_diagram.js. |
+| 2026-01-23 | Remove dead code | Removed 3 empty function stubs (`processTcpFlowsChunked`, `updateHandshakeLinesGlobal`, `updateClosingLinesGlobal`), 2 commented-out `applyBrushSelectionPrefilter()` calls with explanatory comments, and orphaned comments. Verified no references via grep before removal. Net savings: 16 lines. |
