@@ -2,7 +2,7 @@
 // This file contains all logic for the IP Connection Analysis visualization
 import { initSidebar, createIPCheckboxes as sbCreateIPCheckboxes, filterIPList as sbFilterIPList, filterFlowList as sbFilterFlowList, updateFlagStats as sbUpdateFlagStats, updateIPStats as sbUpdateIPStats, createFlowListCapped as sbCreateFlowListCapped, updateTcpFlowStats as sbUpdateTcpFlowStats, updateGroundTruthStatsUI as sbUpdateGroundTruthStatsUI, wireSidebarControls as sbWireSidebarControls, showFlowProgress as sbShowFlowProgress, updateFlowProgress as sbUpdateFlowProgress, hideFlowProgress as sbHideFlowProgress, wireFlowListModalControls as sbWireFlowListModalControls, showCsvProgress as sbShowCsvProgress, updateCsvProgress as sbUpdateCsvProgress, hideCsvProgress as sbHideCsvProgress } from './sidebar.js';
 import { renderInvalidLegend as sbRenderInvalidLegend, renderClosingLegend as sbRenderClosingLegend, drawFlagLegend as drawFlagLegendFromModule } from './legends.js';
-import { initOverview, createOverviewChart, createOverviewFromPairs, createOverviewFromAdaptive, createFlowOverviewChart, updateBrushFromZoom, updateOverviewInvalidVisibility, setBrushUpdating, refreshFlowOverview } from './overview_chart.js';
+import { initOverview, createOverviewChart, createOverviewFromAdaptive, createFlowOverviewChart, updateBrushFromZoom, updateOverviewInvalidVisibility, setBrushUpdating, refreshFlowOverview } from './overview_chart.js';
 import { FLOW_RECONSTRUCT_BATCH } from './config.js';
 import {
     DEBUG, RADIUS_MIN, RADIUS_MAX, ROW_GAP, TOP_PAD,
@@ -28,8 +28,6 @@ import {
     createSyntheticFlowsFromChunks,
     logSyntheticFlowRange,
     initializeAdaptiveLoader,
-    loadFlowBinsFallback,
-    loadIpPairOverview,
     updateFlowDataUI,
     calculateChartDimensions
 } from './src/data/flow-data-handler.js';
@@ -3910,15 +3908,9 @@ async function handleChunkedFlowsFormat(detail, manifest, totalFlows, flowTimeEx
 
     const hasAdaptiveOverview = initialized;
 
-    // Fall back to single-resolution flow_bins.json if adaptive loader not available
-    let flowBins = null;
     if (!hasAdaptiveOverview) {
-        console.log('[FlowData] Multi-resolution index not found, trying single-resolution fallback...');
-        flowBins = await loadFlowBinsFallback(basePath);
+        console.warn('[FlowData] Multi-resolution index not found - overview chart will use chunk loading');
     }
-
-    // Load ip_pair_overview.json for instant overview chart rendering
-    const ipPairOverview = await loadIpPairOverview(basePath);
 
     // Try to load flow_list.json for flow list popup (lighter alternative to chunks)
     const hasFlowList = await tryLoadFlowList(basePath);
@@ -3937,8 +3929,6 @@ async function handleChunkedFlowsFormat(detail, manifest, totalFlows, flowTimeEx
         loadChunksForTimeRange,
         getChunkPath: detail.getChunkPath,
         basePath,
-        flowBins,
-        ipPairOverview,
         hasAdaptiveOverview,
         hasFlowList
     };

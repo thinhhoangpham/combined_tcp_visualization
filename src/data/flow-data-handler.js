@@ -233,55 +233,6 @@ export async function initializeAdaptiveLoader({ basePath, AdaptiveOverviewLoade
     }
 }
 
-/**
- * Load single-resolution flow bins fallback
- * @param {string} basePath - Base path to data folder
- * @returns {Promise<Array|null>} Flow bins array or null
- */
-export async function loadFlowBinsFallback(basePath) {
-    try {
-        const flowBinsPath = `${basePath}/indices/flow_bins.json`;
-        console.log(`[FlowData] Loading flow bins from ${flowBinsPath}...`);
-
-        const flowBinsResponse = await fetch(flowBinsPath);
-        if (flowBinsResponse.ok) {
-            const flowBins = await flowBinsResponse.json();
-            console.log(`[FlowData] Loaded ${flowBins.length} flow bins (single resolution)`);
-            return flowBins;
-        } else {
-            console.warn('[FlowData] flow_bins.json not found, will use chunk loading fallback');
-            return null;
-        }
-    } catch (err) {
-        console.warn('[FlowData] Error loading flow_bins.json:', err);
-        return null;
-    }
-}
-
-/**
- * Load IP pair overview data
- * @param {string} basePath - Base path to data folder
- * @returns {Promise<Object|null>} IP pair overview object or null
- */
-export async function loadIpPairOverview(basePath) {
-    try {
-        const overviewPath = `${basePath}/indices/ip_pair_overview.json`;
-        console.log(`[FlowData] Loading IP pair overview from ${overviewPath}...`);
-
-        const overviewResponse = await fetch(overviewPath);
-        if (overviewResponse.ok) {
-            const ipPairOverview = await overviewResponse.json();
-            console.log(`[FlowData] Loaded IP pair overview: ${Object.keys(ipPairOverview.pairs || {}).length} pairs, ${ipPairOverview.meta?.bin_count || 0} bins`);
-            return ipPairOverview;
-        } else {
-            console.warn('[FlowData] ip_pair_overview.json not found, will use flow_bins.json or chunk loading fallback');
-            return null;
-        }
-    } catch (err) {
-        console.warn('[FlowData] Error loading ip_pair_overview.json:', err);
-        return null;
-    }
-}
 
 /**
  * Update flow data UI elements

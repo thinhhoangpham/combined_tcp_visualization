@@ -2,7 +2,6 @@
 // Flow loading decision tree and chunk loading utilities
 
 import { LOG } from '../utils/formatters.js';
-import { buildIPPairKeys } from './packet-filter.js';
 import {
     createProgressIndicator,
     updateProgressIndicator,
@@ -11,63 +10,21 @@ import {
 import { getFlowListLoader } from './flow-list-loader.js';
 
 /**
- * Find relevant time ranges from flow bins that contain flows for selected IP pairs.
- * @param {Array} flowBins - Flow bins data
- * @param {Set<string>} selectedIPPairs - Set of normalized IP pair keys
- * @param {Array|null} overviewTimeExtent - Optional [start, end] time filter
- * @returns {Array} Array of { start, end } time ranges
- */
-function findRelevantTimeRanges(flowBins, selectedIPPairs, overviewTimeExtent) {
-    if (!flowBins) return null;
-
-    const ranges = [];
-    for (const bin of flowBins) {
-        // Filter by time range if overview time filter is active
-        if (overviewTimeExtent) {
-            const [rangeStart, rangeEnd] = overviewTimeExtent;
-            if (bin.end < rangeStart || bin.start > rangeEnd) {
-                continue;
-            }
-        }
-
-        // Check if this bin has flows for selected IP pairs
-        let hasRelevantFlows = false;
-        for (const ipPair of Object.keys(bin.flows_by_ip_pair || {})) {
-            if (selectedIPPairs.has(ipPair)) {
-                hasRelevantFlows = true;
-                break;
-            }
-        }
-
-        if (hasRelevantFlows) {
-            ranges.push({ start: bin.start, end: bin.end });
-        }
-    }
-    return ranges;
-}
-
-/**
  * Filter chunks metadata to find chunks matching selected IPs and time ranges.
  * @param {Array} chunksMeta - Array of chunk metadata
  * @param {Set<string>} selectedIPSet - Set of selected IPs
- * @param {Array|null} relevantTimeRanges - Time ranges from flow bins
+ * @param {Array|null} _unused - Unused parameter (kept for API compatibility)
  * @param {Array|null} overviewTimeExtent - Optional [start, end] time filter
  * @returns {Array} Filtered chunks
  */
-function filterChunks(chunksMeta, selectedIPSet, relevantTimeRanges, overviewTimeExtent) {
+function filterChunks(chunksMeta, selectedIPSet, _unused, overviewTimeExtent) {
     return chunksMeta.filter(chunk => {
         // Check if any selected IP is in this chunk's IP list
         if (!chunk.ips) return false;
         if (!chunk.ips.some(ip => selectedIPSet.has(ip))) return false;
 
-        // If we have relevantTimeRanges from flow_bins.json, use them to filter chunks
-        if (relevantTimeRanges && relevantTimeRanges.length > 0) {
-            const overlaps = relevantTimeRanges.some(range =>
-                !(chunk.end < range.start || chunk.start > range.end)
-            );
-            if (!overlaps) return false;
-        } else if (overviewTimeExtent) {
-            // Fallback: if no flow_bins.json but time filter is active, filter by time
+        // Filter by time if overview time filter is active
+        if (overviewTimeExtent) {
             const [rangeStart, rangeEnd] = overviewTimeExtent;
             if (chunk.end < rangeStart || chunk.start > rangeEnd) {
                 return false;
@@ -288,29 +245,16 @@ export async function loadFlowData(context) {
 
         LOG(`Loading chunked flow data for selected IPs:`, selectedIPs);
 
-        // Create normalized IP pair keys for filtering
-        const selectedIPPairs = buildIPPairKeys(selectedIPs);
-
-        // Find relevant time ranges from flow bins if available
-        const relevantTimeRanges = findRelevantTimeRanges(
-            flowDataState.flowBins,
-            selectedIPPairs,
-            state.timearcs.overviewTimeExtent
-        );
-
         // Filter chunks to load
         const matchingChunks = filterChunks(
             flowDataState.chunksMeta,
             selectedIPSet,
-            relevantTimeRanges,
+            null, // no single-resolution flow bins optimization
             state.timearcs.overviewTimeExtent
         );
 
-        const optimizationMsg = relevantTimeRanges
-            ? ` (optimized via flow_bins.json: ${relevantTimeRanges.length} relevant bins)`
-            : '';
-        console.log(`[LOADING] Found ${matchingChunks.length} chunks involving selected IPs${optimizationMsg}`);
-        LOG(`Found ${matchingChunks.length} chunks involving selected IPs${optimizationMsg}`);
+        console.log(`[LOADING] Found ${matchingChunks.length} chunks involving selected IPs`);
+        LOG(`Found ${matchingChunks.length} chunks involving selected IPs`);
 
         // Start async chunk loading
         loadChunkedFlows({
